@@ -11,21 +11,21 @@ func TestTokenizer(t *testing.T) {
 		expectLiteral string
 	}{
 		{Num, "1"},
-		{Reserved, "+"},
+		{Plus, "+"},
 		{Num, "2"},
-		{Reserved, "-"},
+		{Minus, "-"},
 		{Num, "3"},
 		{Eof, ""},
 	}
 
 	tokenizer := NewTokenizer(input1)
-	tokens := tokenizer.Run()
-	for i, c := range case1 {
-		if tokens[i].Kind != c.expectKind {
+	for _, c := range case1 {
+		token := tokenizer.next()
+		if token.Kind != c.expectKind {
 			t.Error("The token kind is wrong\n")
 		}
 
-		if tokens[i].Literal != c.expectLiteral {
+		if token.Literal != c.expectLiteral {
 			t.Error("The token literal is wrong\n")
 		}
 	}
