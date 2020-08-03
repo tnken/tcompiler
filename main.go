@@ -3,60 +3,67 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
 type Tokenizer struct {
 	input string
 	pos   int
-	ch    byte
 }
 
 func NewTokenizer(input string) *Tokenizer {
-	return &Tokenizer{input, 0, 0}
+	return &Tokenizer{input, 0}
 }
 
 func (t *Tokenizer) recognizeMany(f func(byte) bool) {
 	for t.pos < len(t.input) && f(t.input[t.pos]) {
-		t.pos += 1
+		t.pos++
 	}
+}
+
+func isDigit(b byte) bool {
+	return (strings.IndexByte("0123456789", b) > -1)
 }
 
 func (t *Tokenizer) lexNumber() Token {
 	start := t.pos
-	fn := func(b byte) bool { return (strings.IndexByte("0123456789", b) > -1) }
-	t.recognizeMany(fn)
+	t.recognizeMany(isDigit)
 	return Token{Num, t.input[start:t.pos]}
 }
 
 func (t *Tokenizer) skipSpaces() {
-	fn := func(b byte) bool { return (strings.IndexByte(" \n\t", b) > -1) }
-	t.recognizeMany(fn)
+	t.recognizeMany(func(b byte) bool { return (strings.IndexByte(" \n\t", b) > -1) })
 }
 
 func (t *Tokenizer) next() Token {
+	// TODO: more simple
 	if t.pos >= len(t.input) {
-		return Token{Eof, ""}
+		return t.newToken(Eof, "")
 	}
-	t.ch = t.input[t.pos]
-
-	if t.ch == ' ' || t.ch == '\t' || t.ch == '\n' {
+	ch := t.input[t.pos]
+	if ch == ' ' || ch == '\t' || ch == '\n' {
 		t.skipSpaces()
-		t.ch = t.input[t.pos]
 	}
+
+	if t.pos >= len(t.input) {
+		return t.newToken(Eof, "")
+	}
+	ch = t.input[t.pos]
 
 	switch {
-	case t.ch == '+':
-		return t.newToken(Plus, string(t.ch))
-	case t.ch == '-':
-		return t.newToken(Minus, string(t.ch))
-	case t.ch == '*':
-		return t.newToken(Asterisk, string(t.ch))
-	case t.ch == '/':
-		return t.newToken(Slash, string(t.ch))
-	default:
+	case ch == '+':
+		return t.newToken(Plus, string(ch))
+	case ch == '-':
+		return t.newToken(Minus, string(ch))
+	case ch == '*':
+		return t.newToken(Asterisk, string(ch))
+	case ch == '/':
+		return t.newToken(Slash, string(ch))
+	case isDigit(ch):
 		return t.lexNumber()
 	}
+	return t.newToken(Eof, "")
 }
 
 type TokenKind int
@@ -77,10 +84,10 @@ const (
 )
 
 var precedences = map[TokenKind]int{
-	Plus:  Sum,
-	Minus: Sum,
+	Plus:     Sum,
+	Minus:    Sum,
 	Asterisk: Mult,
-	Slash: Mult,
+	Slash:    Mult,
 }
 
 type Token struct {
@@ -120,6 +127,7 @@ func (p *Parser) nextToken() {
 
 type Expr interface {
 	string() string
+	literal() string
 }
 
 type InfixExpr struct {
@@ -133,12 +141,20 @@ func (ie InfixExpr) string() string {
 	return "(" + ie.left.string() + " " + ie.tok.Literal + " " + ie.right.string() + ")"
 }
 
+func (ie InfixExpr) literal() string {
+	return ie.tok.Literal
+}
+
 type NumberLiteral struct {
 	tok Token
 	val string
 }
 
 func (nl NumberLiteral) string() string {
+	return nl.val
+}
+
+func (nl NumberLiteral) literal() string {
 	return nl.val
 }
 
@@ -158,7 +174,7 @@ func (p *Parser) expr(precedence int) Expr {
 	for precedence < p.peekToken.precedence() {
 		// Infix
 		switch p.peekToken.Kind {
-		case Plus,Minus, Asterisk, Slash:
+		case Plus, Minus, Asterisk, Slash:
 			p.nextToken()
 			lhd = p.infixExpr(lhd)
 		default:
@@ -183,6 +199,39 @@ func (p *Parser) numberLiteral() NumberLiteral {
 	return NumberLiteral{p.curToken, p.curToken.Literal}
 }
 
+type Object interface {
+	stringVal() string
+}
+
+type Integer struct {
+	value int
+}
+
+func (i Integer) stringVal() string { return strconv.Itoa(i.value) }
+
+// Tree Walk
+func eval(expr Expr) Object {
+	switch v := expr.(type) {
+	case InfixExpr:
+		l := eval(v.left).(Integer).value
+		r := eval(v.right).(Integer).value
+		switch v.op {
+		case Plus:
+			return Integer{value: l + r}
+		case Minus:
+			return Integer{value: l - r}
+		case Asterisk:
+			return Integer{value: l * r}
+		case Slash:
+			return Integer{value: int(l / r)}
+		}
+	case NumberLiteral:
+		i, _ := strconv.Atoi(v.val)
+		return Integer{value: i}
+	}
+	return nil
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		panic("error: argument missing")
@@ -192,4 +241,5 @@ func main() {
 	p := NewParser(tokenizer)
 	exp := p.expr(Lowest)
 	fmt.Println(exp.string())
+	fmt.Println(eval(exp).stringVal())
 }
