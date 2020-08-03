@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Tokenizer struct {
@@ -15,26 +16,42 @@ func NewTokenizer(input string) *Tokenizer {
 	return &Tokenizer{input, 0, 0}
 }
 
-//func (t *Tokenizer) eatSpaces() {
-//}
+func (t *Tokenizer) recognizeMany(f func(byte) bool) {
+	for t.pos < len(t.input) && f(t.input[t.pos]) {
+		t.pos += 1
+	}
+}
 
-//func (t *Tokenizer) readNumber() {
-//}
+func (t *Tokenizer) lexNumber() Token {
+	start := t.pos
+	fn := func(b byte) bool { return (strings.IndexByte("0123456789", b) > -1) }
+	t.recognizeMany(fn)
+	return Token{Num, t.input[start:t.pos]}
+}
+
+func (t *Tokenizer) skipSpaces() {
+	fn := func(b byte) bool { return (strings.IndexByte(" \n\t", b) > -1) }
+	t.recognizeMany(fn)
+}
 
 func (t *Tokenizer) next() Token {
 	if t.pos >= len(t.input) {
 		return Token{Eof, ""}
 	}
-
 	t.ch = t.input[t.pos]
-	t.pos++
+
+	if t.ch == ' ' || t.ch == '\t' || t.ch == '\n' {
+		t.skipSpaces()
+		t.ch = t.input[t.pos]
+	}
+
 	switch {
 	case t.ch == '+':
 		return t.newToken(Plus, string(t.ch))
 	case t.ch == '-':
 		return t.newToken(Minus, string(t.ch))
 	default:
-		return t.newToken(Num, string(t.ch))
+		return t.lexNumber()
 	}
 }
 
@@ -70,6 +87,7 @@ func (tok Token) precedence() int {
 }
 
 func (t *Tokenizer) newToken(k TokenKind, lit string) Token {
+	t.pos++
 	return Token{k, lit}
 }
 
