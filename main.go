@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strconv"
@@ -232,14 +233,19 @@ func eval(expr Expr) Object {
 	return nil
 }
 
-func main() {
-	if len(os.Args) < 2 {
-		panic("error: argument missing")
+func repl() {
+	stdin := bufio.NewScanner(os.Stdin)
+	fmt.Print(">> ")
+	for stdin.Scan(){
+		text := stdin.Text()
+		tokenizer := NewTokenizer(text)
+		p := NewParser(tokenizer)
+		exp := p.expr(Lowest)
+		fmt.Println(eval(exp).stringVal())
+		fmt.Print(">> ")
 	}
+}
 
-	tokenizer := NewTokenizer(os.Args[1])
-	p := NewParser(tokenizer)
-	exp := p.expr(Lowest)
-	fmt.Println(exp.string())
-	fmt.Println(eval(exp).stringVal())
+func main() {
+	repl()
 }
