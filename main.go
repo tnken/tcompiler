@@ -50,6 +50,10 @@ func (t *Tokenizer) next() Token {
 		return t.newToken(Plus, string(t.ch))
 	case t.ch == '-':
 		return t.newToken(Minus, string(t.ch))
+	case t.ch == '*':
+		return t.newToken(Asterisk, string(t.ch))
+	case t.ch == '/':
+		return t.newToken(Slash, string(t.ch))
 	default:
 		return t.lexNumber()
 	}
@@ -61,17 +65,22 @@ const (
 	Num TokenKind = iota
 	Plus
 	Minus
+	Asterisk
+	Slash
 	Eof
 )
 
 const (
 	Lowest = iota
 	Sum    // + -
+	Mult   // * /
 )
 
 var precedences = map[TokenKind]int{
 	Plus:  Sum,
 	Minus: Sum,
+	Asterisk: Mult,
+	Slash: Mult,
 }
 
 type Token struct {
@@ -149,10 +158,7 @@ func (p *Parser) expr(precedence int) Expr {
 	for precedence < p.peekToken.precedence() {
 		// Infix
 		switch p.peekToken.Kind {
-		case Plus:
-			p.nextToken()
-			lhd = p.infixExpr(lhd)
-		case Minus:
+		case Plus,Minus, Asterisk, Slash:
 			p.nextToken()
 			lhd = p.infixExpr(lhd)
 		default:
