@@ -61,6 +61,12 @@ func (t *Tokenizer) next() Token {
 		return t.newToken(Asterisk, string(ch))
 	case ch == '/':
 		return t.newToken(Slash, string(ch))
+	case ch == '[':
+		return t.newToken(Lbracket, string(ch))
+	case ch == ']':
+		return t.newToken(Rbracket, string(ch))
+	case ch == ',':
+		return t.newToken(Comma, string(ch))
 	case isDigit(ch):
 		return t.lexNumber()
 	}
@@ -76,12 +82,16 @@ const (
 	Asterisk
 	Slash
 	Eof
+	Lbracket // [
+	Rbracket // ]
+	Comma    // ,
 )
 
 const (
 	Lowest = iota
 	Sum    // + -
 	Mult   // * /
+	Index
 )
 
 var precedences = map[TokenKind]int{
@@ -89,6 +99,7 @@ var precedences = map[TokenKind]int{
 	Minus:    Sum,
 	Asterisk: Mult,
 	Slash:    Mult,
+	Lbracket: Index,
 }
 
 type Token struct {
@@ -128,7 +139,6 @@ func (p *Parser) nextToken() {
 
 type Expr interface {
 	string() string
-	literal() string
 }
 
 type InfixExpr struct {
@@ -142,10 +152,6 @@ func (ie InfixExpr) string() string {
 	return "(" + ie.left.string() + " " + ie.tok.Literal + " " + ie.right.string() + ")"
 }
 
-func (ie InfixExpr) literal() string {
-	return ie.tok.Literal
-}
-
 type NumberLiteral struct {
 	tok Token
 	val string
@@ -155,8 +161,20 @@ func (nl NumberLiteral) string() string {
 	return nl.val
 }
 
-func (nl NumberLiteral) literal() string {
-	return nl.val
+type ArrayInit struct {
+	exprs []Expr
+}
+
+func (ai ArrayInit) string() string {
+	s := "["
+	for i, v := range ai.exprs {
+		if i == 0 {
+			s += v.string()
+		} else {
+			s += " " + v.string()
+		}
+	}
+	return s + "]"
 }
 
 // Pratt Parsing
@@ -167,7 +185,9 @@ func (p *Parser) expr(precedence int) Expr {
 	// Prefix
 	switch p.curToken.Kind {
 	case Num:
-		lhd = p.numberLiteral()
+		lhd = NumberLiteral{p.curToken, p.curToken.Literal}
+	case Lbracket:
+		lhd = p.arrayInit()
 	default:
 		return nil
 	}
@@ -186,6 +206,13 @@ func (p *Parser) expr(precedence int) Expr {
 	return lhd
 }
 
+func (p *Parser) check(expected TokenKind) {
+	if p.curToken.Kind != expected {
+		panic("error: unexpected Token")
+	}
+	p.nextToken()
+}
+
 func (p *Parser) infixExpr(left Expr) InfixExpr {
 	exp := InfixExpr{tok: p.curToken, op: p.curToken.Kind, left: left}
 
@@ -196,8 +223,17 @@ func (p *Parser) infixExpr(left Expr) InfixExpr {
 	return exp
 }
 
-func (p *Parser) numberLiteral() NumberLiteral {
-	return NumberLiteral{p.curToken, p.curToken.Literal}
+func (p *Parser) arrayInit() ArrayInit {
+	p.nextToken()
+	exprs := []Expr{}
+	for p.curToken.Kind != Rbracket {
+		exprs = append(exprs, p.expr(p.curToken.precedence()))
+		p.nextToken()
+		if p.curToken.Kind != Rbracket {
+			p.check(Comma)
+		}
+	}
+	return ArrayInit{exprs: exprs}
 }
 
 type Object interface {
@@ -209,6 +245,32 @@ type Integer struct {
 }
 
 func (i Integer) stringVal() string { return strconv.Itoa(i.value) }
+
+type Array struct {
+	val []Object
+}
+
+func (arr Array) stringVal() string {
+	s := "["
+	for i, v := range arr.val {
+		switch ele := v.(type) {
+		//TODO: remove redundancy
+		case Integer:
+			if i == 0 {
+				s += strconv.Itoa(ele.value)
+			} else {
+				s += " " + strconv.Itoa(ele.value)
+			}
+		case Array:
+			if i == 0 {
+				s += ele.stringVal()
+			} else {
+				s += " " + ele.stringVal()
+			}
+		}
+	}
+	return s + "]"
+}
 
 // Tree Walk
 func eval(expr Expr) Object {
@@ -229,6 +291,12 @@ func eval(expr Expr) Object {
 	case NumberLiteral:
 		i, _ := strconv.Atoi(v.val)
 		return Integer{value: i}
+	case ArrayInit:
+		val := []Object{}
+		for _, ele := range v.exprs {
+			val = append(val, eval(ele))
+		}
+		return Array{val: val}
 	}
 	return nil
 }
@@ -236,7 +304,7 @@ func eval(expr Expr) Object {
 func repl() {
 	stdin := bufio.NewScanner(os.Stdin)
 	fmt.Print(">> ")
-	for stdin.Scan(){
+	for stdin.Scan() {
 		text := stdin.Text()
 		tokenizer := NewTokenizer(text)
 		p := NewParser(tokenizer)
