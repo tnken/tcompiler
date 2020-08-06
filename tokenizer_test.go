@@ -35,11 +35,13 @@ func TestTokenizer(t *testing.T) {
 		}
 	}
 
-	input2 := "[1, 2, 3, 2+2]"
+	input2 := "hoge = [1, 2, 3, 2+2]"
 	case2 := []struct {
 		expectKind    TokenKind
 		expectLiteral string
 	}{
+		{Identifier, "hoge"},
+		{Assign, "="},
 		{Lbracket, "["},
 		{Num, "1"},
 		{Comma, ","},

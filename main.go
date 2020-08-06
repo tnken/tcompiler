@@ -32,12 +32,21 @@ func isDigit(b byte) bool {
 	return (strings.IndexByte("0123456789", b) > -1)
 }
 
+func isAlnum(b byte) bool {
+	return isChar(b) || isDigit(b)
+}
+
 func (t *Tokenizer) lexNumber() Token {
 	start := t.pos
 	t.recognizeMany(isDigit)
 	return Token{Num, t.input[start:t.pos]}
 }
 
+func (t *Tokenizer) lexIdent() Token {
+	start := t.pos
+	t.recognizeMany(isAlnum)
+	return Token{Identifier, t.input[start:t.pos]}
+}
 func (t *Tokenizer) skipSpaces() {
 	t.recognizeMany(func(b byte) bool { return (strings.IndexByte(" \n\t", b) > -1) })
 }
@@ -78,6 +87,7 @@ func (t *Tokenizer) next() Token {
 		return t.lexNumber()
 	case isChar((ch)):
 		return t.newToken(Identifier, string(ch))
+		return t.lexIdent()
 	}
 	return t.newToken(Eof, "")
 }
