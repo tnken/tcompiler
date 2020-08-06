@@ -8,12 +8,13 @@ import (
 	"strings"
 )
 
+//Tokenizer
 type Tokenizer struct {
 	input string
 	pos   int
 }
 
-func NewTokenizer(input string) *Tokenizer {
+func newTokenizer(input string) *Tokenizer {
 	return &Tokenizer{input, 0}
 }
 
@@ -21,6 +22,10 @@ func (t *Tokenizer) recognizeMany(f func(byte) bool) {
 	for t.pos < len(t.input) && f(t.input[t.pos]) {
 		t.pos++
 	}
+}
+
+func isChar(b byte) bool {
+	return 'a' <= b && b <= 'z'
 }
 
 func isDigit(b byte) bool {
@@ -67,39 +72,48 @@ func (t *Tokenizer) next() Token {
 		return t.newToken(Rbracket, string(ch))
 	case ch == ',':
 		return t.newToken(Comma, string(ch))
+	case ch == '=':
+		return t.newToken(Assign, string(ch))
 	case isDigit(ch):
 		return t.lexNumber()
+	case isChar((ch)):
+		return t.newToken(Identifier, string(ch))
 	}
 	return t.newToken(Eof, "")
 }
 
+// TokenKind express the kind of the token
 type TokenKind int
 
 const (
-	Num TokenKind = iota
-	Plus
-	Minus
-	Asterisk
-	Slash
+	Num      TokenKind = iota //0-9
+	Plus                      // +
+	Minus                     // -
+	Asterisk                  // *
+	Slash                     // /
+	Lbracket                  // [
+	Rbracket                  // ]
+	Assign                    // =
+	Comma                     // ,
+	Identifier
 	Eof
-	Lbracket // [
-	Rbracket // ]
-	Comma    // ,
 )
 
 const (
-	Lowest = iota
-	Sum    // + -
-	Mult   // * /
-	Index
+	lowest = iota
+	assign
+	sum
+	mult
+	index
 )
 
 var precedences = map[TokenKind]int{
-	Plus:     Sum,
-	Minus:    Sum,
-	Asterisk: Mult,
-	Slash:    Mult,
-	Lbracket: Index,
+	Plus:     sum,
+	Minus:    sum,
+	Asterisk: mult,
+	Slash:    mult,
+	Lbracket: index,
+	Assign:   assign,
 }
 
 type Token struct {
@@ -111,7 +125,7 @@ func (tok Token) precedence() int {
 	if precedence, ok := precedences[tok.Kind]; ok {
 		return precedence
 	}
-	return Lowest
+	return lowest
 }
 
 func (t *Tokenizer) newToken(k TokenKind, lit string) Token {
@@ -119,6 +133,7 @@ func (t *Tokenizer) newToken(k TokenKind, lit string) Token {
 	return Token{k, lit}
 }
 
+// parse
 type Parser struct {
 	tokenizer *Tokenizer
 	curToken  Token
@@ -137,8 +152,19 @@ func (p *Parser) nextToken() {
 	p.peekToken = p.tokenizer.next()
 }
 
-type Expr interface {
+// ast
+// TODO: fix methods of interface, stmt, expr
+type Node interface {
 	string() string
+}
+type Expr interface {
+	Node
+	nodeExpr()
+}
+
+type Stmt interface {
+	Node
+	nodeStmt()
 }
 
 type InfixExpr struct {
@@ -152,6 +178,8 @@ func (ie InfixExpr) string() string {
 	return "(" + ie.left.string() + " " + ie.tok.Literal + " " + ie.right.string() + ")"
 }
 
+func (ie InfixExpr) nodeExpr() {}
+
 type NumberLiteral struct {
 	tok Token
 	val string
@@ -160,6 +188,8 @@ type NumberLiteral struct {
 func (nl NumberLiteral) string() string {
 	return nl.val
 }
+
+func (nl NumberLiteral) nodeExpr() {}
 
 type ArrayInit struct {
 	exprs []Expr
@@ -177,6 +207,61 @@ func (ai ArrayInit) string() string {
 	return s + "]"
 }
 
+func (ai ArrayInit) nodeExpr() {}
+
+type IdentKind int
+
+const (
+	variable IdentKind = iota
+)
+
+type Ident struct {
+	kind IdentKind
+	name string
+}
+
+func (i Ident) string() string {
+	return i.name
+}
+
+func (i Ident) nodeExpr() {}
+
+type VarDecl struct {
+	left  Ident
+	right Expr
+}
+
+func (vd VarDecl) string() string {
+	return vd.left.string() + " = " + vd.right.string()
+}
+
+func (vd VarDecl) nodeStmt() {}
+
+type ExprStmt struct {
+	val Expr
+}
+
+func (es ExprStmt) string() string {
+	return es.val.string()
+}
+
+func (es ExprStmt) nodeStmt() {}
+
+// 最初に単体のstmtを返せるようにして，あとからファイルを導入して配列で返せるようにする
+func (p *Parser) stmt() Stmt {
+	lhd := p.expr(lowest)
+	switch v := lhd.(type) {
+	case Ident:
+		if p.peekToken.Kind == Assign {
+			p.nextToken()
+			return p.varDecl(v)
+		}
+	default:
+		return ExprStmt{val: v}
+	}
+	return nil
+}
+
 // Pratt Parsing
 // https://github.sfpgmr.net/tdop.github.io/
 // https://dev.to/jrop/pratt-parsing
@@ -188,6 +273,8 @@ func (p *Parser) expr(precedence int) Expr {
 		lhd = NumberLiteral{p.curToken, p.curToken.Literal}
 	case Lbracket:
 		lhd = p.arrayInit()
+	case Identifier:
+		lhd = Ident{variable, p.curToken.Literal}
 	default:
 		return nil
 	}
@@ -236,6 +323,11 @@ func (p *Parser) arrayInit() ArrayInit {
 	return ArrayInit{exprs: exprs}
 }
 
+func (p *Parser) varDecl(lhd Ident) VarDecl {
+	p.nextToken()
+	return VarDecl{lhd, p.expr(lowest)}
+}
+
 type Object interface {
 	stringVal() string
 }
@@ -272,12 +364,45 @@ func (arr Array) stringVal() string {
 	return s + "]"
 }
 
+// eval
+type Var struct {
+	name string
+	obj  Object
+}
+
+func (v Var) stringVal() string { return v.obj.stringVal() }
+
+type Eval struct {
+	vars map[string]Var
+}
+
+func newEval() Eval {
+	return Eval{vars: map[string]Var{}}
+}
+
+func (e Eval) eval(node Node) Object {
+	return e.stmt(node.(Stmt))
+}
+
+func (e Eval) stmt(stmt Stmt) Object {
+	switch s := stmt.(type) {
+	case VarDecl:
+		name := s.left.name
+		v := Var{name: name, obj: e.expr(s.right)}
+		e.vars[name] = v
+		return v
+	case ExprStmt:
+		return e.expr(s.val)
+	}
+	panic("error")
+}
+
 // Tree Walk
-func eval(expr Expr) Object {
+func (e Eval) expr(expr Expr) Object {
 	switch v := expr.(type) {
 	case InfixExpr:
-		l := eval(v.left).(Integer).value
-		r := eval(v.right).(Integer).value
+		l := e.expr(v.left).(Integer).value
+		r := e.expr(v.right).(Integer).value
 		switch v.op {
 		case Plus:
 			return Integer{value: l + r}
@@ -294,9 +419,11 @@ func eval(expr Expr) Object {
 	case ArrayInit:
 		val := []Object{}
 		for _, ele := range v.exprs {
-			val = append(val, eval(ele))
+			val = append(val, e.expr(ele))
 		}
 		return Array{val: val}
+	case Ident:
+		return e.vars[v.name].obj
 	}
 	return nil
 }
@@ -306,10 +433,11 @@ func repl() {
 	fmt.Print(">> ")
 	for stdin.Scan() {
 		text := stdin.Text()
-		tokenizer := NewTokenizer(text)
+		tokenizer := newTokenizer(text)
 		p := NewParser(tokenizer)
-		exp := p.expr(Lowest)
-		fmt.Println(eval(exp).stringVal())
+		stmt := p.stmt()
+		e := newEval()
+		fmt.Println(e.eval(stmt).stringVal())
 		fmt.Print(">> ")
 	}
 }

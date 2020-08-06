@@ -5,11 +5,13 @@ import (
 )
 
 func TestTokenizer(t *testing.T) {
-	input1 := "1 + 20 - 300 * 4 / 5"
+	input1 := "a = 1 + 20 - 300 * 4 / 5"
 	case1 := []struct {
 		expectKind    TokenKind
 		expectLiteral string
 	}{
+		{Identifier, "a"},
+		{Assign, "="},
 		{Num, "1"},
 		{Plus, "+"},
 		{Num, "20"},
@@ -21,7 +23,7 @@ func TestTokenizer(t *testing.T) {
 		{Num, "5"},
 		{Eof, ""},
 	}
-	tokenizer := NewTokenizer(input1)
+	tokenizer := newTokenizer(input1)
 	for _, c := range case1 {
 		token := tokenizer.next()
 		if token.Kind != c.expectKind {
@@ -51,7 +53,7 @@ func TestTokenizer(t *testing.T) {
 		{Rbracket, "]"},
 		{Eof, ""},
 	}
-	tokenizer = NewTokenizer(input2)
+	tokenizer = newTokenizer(input2)
 	for _, c := range case2 {
 		token := tokenizer.next()
 		if token.Kind != c.expectKind {
