@@ -79,6 +79,10 @@ func (t *Tokenizer) next() Token {
 		return t.newToken(Lbracket, string(ch))
 	case ch == ']':
 		return t.newToken(Rbracket, string(ch))
+	case ch == '(':
+		return t.newToken(LParen, string(ch))
+	case ch == ')':
+		return t.newToken(RParen, string(ch))
 	case ch == ',':
 		return t.newToken(Comma, string(ch))
 	case ch == '=':
@@ -86,7 +90,6 @@ func (t *Tokenizer) next() Token {
 	case isDigit(ch):
 		return t.lexNumber()
 	case isChar((ch)):
-		return t.newToken(Identifier, string(ch))
 		return t.lexIdent()
 	}
 	return t.newToken(Eof, "")
@@ -103,6 +106,8 @@ const (
 	Slash                     // /
 	Lbracket                  // [
 	Rbracket                  // ]
+	LParen                    // (
+	RParen                    // )
 	Assign                    // =
 	Comma                     // ,
 	Identifier
@@ -223,6 +228,7 @@ type IdentKind int
 
 const (
 	variable IdentKind = iota
+	fn
 )
 
 type Ident struct {
@@ -235,6 +241,25 @@ func (i Ident) string() string {
 }
 
 func (i Ident) nodeExpr() {}
+
+type FnCallExpr struct {
+	ident Ident
+	args  []Expr
+}
+
+func (fc FnCallExpr) string() string {
+	args := ""
+	for i, arg := range fc.args {
+		if i == 0 {
+			args += arg.string()
+		} else {
+			args += " " + arg.string()
+		}
+	}
+	return fc.ident.name + "(" + args + ")"
+}
+
+func (fc FnCallExpr) nodeExpr() {}
 
 type VarDecl struct {
 	left  Ident
@@ -265,11 +290,12 @@ func (p *Parser) stmt() Stmt {
 		if p.peekToken.Kind == Assign {
 			p.nextToken()
 			return p.varDecl(v)
+		} else {
+			return ExprStmt{val: v}
 		}
 	default:
 		return ExprStmt{val: v}
 	}
-	return nil
 }
 
 // Pratt Parsing
@@ -284,7 +310,14 @@ func (p *Parser) expr(precedence int) Expr {
 	case Lbracket:
 		lhd = p.arrayInit()
 	case Identifier:
-		lhd = Ident{variable, p.curToken.Literal}
+		if p.peekToken.Kind == LParen {
+			ident := Ident{fn, p.curToken.Literal}
+			p.nextToken()
+			p.check(LParen)
+			return p.FnCallExpr(ident)
+		} else {
+			lhd = Ident{variable, p.curToken.Literal}
+		}
 	default:
 		return nil
 	}
@@ -336,6 +369,21 @@ func (p *Parser) arrayInit() ArrayInit {
 func (p *Parser) varDecl(lhd Ident) VarDecl {
 	p.nextToken()
 	return VarDecl{lhd, p.expr(lowest)}
+}
+
+func (p *Parser) FnCallExpr(ident Ident) FnCallExpr {
+	args := []Expr{}
+	i := 0
+	for p.curToken.Kind != RParen {
+		args = append(args, p.expr(lowest))
+		i++
+		p.nextToken()
+		if i > 6 {
+			panic("error: too many argument")
+		}
+	}
+	p.check(RParen)
+	return FnCallExpr{args: args, ident: ident}
 }
 
 type Object interface {
@@ -440,13 +488,13 @@ func (e Eval) expr(expr Expr) Object {
 
 func repl() {
 	stdin := bufio.NewScanner(os.Stdin)
+	e := newEval()
 	fmt.Print(">> ")
 	for stdin.Scan() {
 		text := stdin.Text()
 		tokenizer := newTokenizer(text)
 		p := NewParser(tokenizer)
 		stmt := p.stmt()
-		e := newEval()
 		fmt.Println(e.eval(stmt).stringVal())
 		fmt.Print(">> ")
 	}

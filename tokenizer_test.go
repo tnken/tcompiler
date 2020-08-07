@@ -5,7 +5,10 @@ import (
 )
 
 func TestTokenizer(t *testing.T) {
-	input1 := "a = 1 + 20 - 300 * 4 / 5"
+	input1 := `
+		a = 1 + 20 - 300 * 4 / 5
+		testfn(a)	`
+
 	case1 := []struct {
 		expectKind    TokenKind
 		expectLiteral string
@@ -21,6 +24,10 @@ func TestTokenizer(t *testing.T) {
 		{Num, "4"},
 		{Slash, "/"},
 		{Num, "5"},
+		{Identifier, "testfn"},
+		{LParen, "("},
+		{Identifier, "a"},
+		{RParen, ")"},
 		{Eof, ""},
 	}
 	tokenizer := newTokenizer(input1)
