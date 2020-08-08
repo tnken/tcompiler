@@ -2,10 +2,13 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/tarm/serial"
 )
 
 //Tokenizer
@@ -47,6 +50,7 @@ func (t *Tokenizer) lexIdent() Token {
 	t.recognizeMany(isAlnum)
 	return Token{Identifier, t.input[start:t.pos]}
 }
+
 func (t *Tokenizer) skipSpaces() {
 	t.recognizeMany(func(b byte) bool { return (strings.IndexByte(" \n\t", b) > -1) })
 }
@@ -482,6 +486,33 @@ func (e Eval) expr(expr Expr) Object {
 		return Array{val: val}
 	case Ident:
 		return e.vars[v.name].obj
+	}
+	return nil
+}
+
+type Serial struct {
+	port   string
+	baud   int
+	isOpen bool
+	p      *serial.Port
+}
+
+func newSerial(port string, baud int) *Serial {
+	c := &serial.Config{Name: port, Baud: baud}
+	s, err := serial.OpenPort(c)
+	if err != nil {
+		return &Serial{port: port, baud: baud, isOpen: false, p: s}
+	}
+	return &Serial{port: port, baud: baud, isOpen: true, p: s}
+}
+
+func (s *Serial) write(b byte) error {
+	if !s.isOpen {
+		return errors.New("port is not opened")
+	}
+	_, err := s.p.Write([]byte{b})
+	if err != nil {
+		return err
 	}
 	return nil
 }
