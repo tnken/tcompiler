@@ -426,7 +426,6 @@ func (arr Array) stringVal() string {
 	return s + "]"
 }
 
-// eval
 type Var struct {
 	name string
 	obj  Object
@@ -434,12 +433,20 @@ type Var struct {
 
 func (v Var) stringVal() string { return v.obj.stringVal() }
 
+type Nil struct {
+	name string
+}
+
+func (n Nil) stringVal() string { return "nil" }
+
+// eval
 type Eval struct {
+	port string
 	vars map[string]Var
 }
 
-func newEval() Eval {
-	return Eval{vars: map[string]Var{}}
+func newEval(p string) Eval {
+	return Eval{port: p, vars: map[string]Var{}}
 }
 
 func (e Eval) eval(node Node) Object {
@@ -486,6 +493,19 @@ func (e Eval) expr(expr Expr) Object {
 		return Array{val: val}
 	case Ident:
 		return e.vars[v.name].obj
+	case FnCallExpr:
+		switch v.ident.name {
+		// builtin functions
+		case "digitalwrite":
+			// TODO: to be simple
+			serial := newSerial(e.port, 9600)
+			if v.args[0].(NumberLiteral).string() == "1" {
+				serial.write('1')
+			} else {
+				serial.write('0')
+			}
+		}
+		return Nil{}
 	}
 	return nil
 }
@@ -508,7 +528,7 @@ func newSerial(port string, baud int) *Serial {
 
 func (s *Serial) write(b byte) error {
 	if !s.isOpen {
-		return errors.New("port is not opened")
+		return errors.New("error: port is not opened")
 	}
 	_, err := s.p.Write([]byte{b})
 	if err != nil {
@@ -517,9 +537,9 @@ func (s *Serial) write(b byte) error {
 	return nil
 }
 
-func repl() {
+func repl(port string) {
 	stdin := bufio.NewScanner(os.Stdin)
-	e := newEval()
+	e := newEval(port)
 	fmt.Print(">> ")
 	for stdin.Scan() {
 		text := stdin.Text()
@@ -532,5 +552,6 @@ func repl() {
 }
 
 func main() {
-	repl()
+	port := "/dev/tty.usbmodem14501"
+	repl(port)
 }

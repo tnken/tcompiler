@@ -19,7 +19,8 @@ func TestEval(t *testing.T) {
 		{"1+c", "10"},
 	}
 
-	e := newEval()
+	port := ""
+	e := newEval(port)
 	for _, c := range cases {
 		tokenizer := newTokenizer(c.input)
 		p := NewParser(tokenizer)
