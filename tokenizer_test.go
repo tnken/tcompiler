@@ -7,7 +7,13 @@ import (
 func TestTokenizer(t *testing.T) {
 	input1 := `
 		a = 1 + 20 - 300 * 4 / 5
-		testfn(a)	`
+		testfn(a)
+		loop {
+			a = 1 + 20 - 300 * 4 / 5
+			b = a
+			print(b)
+		}
+		`
 
 	case1 := []struct {
 		expectKind    TokenKind
@@ -28,6 +34,27 @@ func TestTokenizer(t *testing.T) {
 		{LParen, "("},
 		{Identifier, "a"},
 		{RParen, ")"},
+		{KeyLoop, "loop"},
+		{Lbrace, "{"},
+		{Identifier, "a"},
+		{Assign, "="},
+		{Num, "1"},
+		{Plus, "+"},
+		{Num, "20"},
+		{Minus, "-"},
+		{Num, "300"},
+		{Asterisk, "*"},
+		{Num, "4"},
+		{Slash, "/"},
+		{Num, "5"},
+		{Identifier, "b"},
+		{Assign, "="},
+		{Identifier, "a"},
+		{Identifier, "print"},
+		{LParen, "("},
+		{Identifier, "b"},
+		{RParen, ")"},
+		{Rbrace, "}"},
 		{Eof, ""},
 	}
 	tokenizer := newTokenizer(input1)

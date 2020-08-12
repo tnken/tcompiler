@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/tarm/serial"
 )
@@ -91,6 +92,16 @@ func (t *Tokenizer) next() Token {
 		return t.newToken(Comma, string(ch))
 	case ch == '=':
 		return t.newToken(Assign, string(ch))
+	case ch == '{':
+		return t.newToken(Lbrace, string(ch))
+	case ch == '}':
+		return t.newToken(Rbrace, string(ch))
+	case t.isReserved():
+		for _, v := range reserved {
+			if t.input[t.pos:t.pos+len(v)] == v {
+				return t.newToken(reservedToKind[t.input[t.pos:t.pos+len(v)]], t.input[t.pos:t.pos+len(v)])
+			}
+		}
 	case isDigit(ch):
 		return t.lexNumber()
 	case isChar((ch)):
@@ -114,8 +125,13 @@ const (
 	RParen                    // )
 	Assign                    // =
 	Comma                     // ,
+	Lbrace                    // {
+	Rbrace                    // }
 	Identifier
 	Eof
+	KeyDo
+	KeyEnd
+	KeyLoop
 )
 
 const (
@@ -135,6 +151,30 @@ var precedences = map[TokenKind]int{
 	Assign:   assign,
 }
 
+var reserved = []string{
+	"do",
+	"end",
+	"loop",
+}
+
+var reservedToKind = map[string]TokenKind{
+	"do":   KeyDo,
+	"end":  KeyEnd,
+	"loop": KeyLoop,
+}
+
+func (tok Tokenizer) isReserved() bool {
+	for _, v := range reserved {
+		if len(tok.input)-tok.pos <= len(v) {
+			continue
+		}
+		if tok.input[tok.pos:tok.pos+len(v)] == v {
+			return true
+		}
+	}
+	return false
+}
+
 type Token struct {
 	Kind    TokenKind
 	Literal string
@@ -147,9 +187,13 @@ func (tok Token) precedence() int {
 	return lowest
 }
 
-func (t *Tokenizer) newToken(k TokenKind, lit string) Token {
-	t.pos++
-	return Token{k, lit}
+func (t *Tokenizer) newToken(tk TokenKind, lit string) Token {
+	i := len(lit)
+	for i > 0 {
+		t.pos++
+		i--
+	}
+	return Token{tk, lit}
 }
 
 // parse
@@ -276,6 +320,20 @@ func (vd VarDecl) string() string {
 
 func (vd VarDecl) nodeStmt() {}
 
+type LoopStmt struct {
+	block []Stmt
+}
+
+func (ls LoopStmt) string() string {
+	s := "loop {"
+	for _, b := range ls.block {
+		s += " " + b.string()
+	}
+	return s + " }"
+}
+
+func (ls LoopStmt) nodeStmt() {}
+
 type ExprStmt struct {
 	val Expr
 }
@@ -288,6 +346,20 @@ func (es ExprStmt) nodeStmt() {}
 
 // 最初に単体のstmtを返せるようにして，あとからファイルを導入して配列で返せるようにする
 func (p *Parser) stmt() Stmt {
+	switch p.curToken.Kind {
+	case KeyLoop:
+		p.nextToken()
+		p.check(Lbrace)
+		b := []Stmt{}
+
+		for p.curToken.Kind != Rbrace {
+			b = append(b, p.stmt())
+			p.nextToken()
+		}
+		p.check(Rbrace)
+		return LoopStmt{block: b}
+	}
+
 	lhd := p.expr(lowest)
 	switch v := lhd.(type) {
 	case Ident:
@@ -386,7 +458,6 @@ func (p *Parser) FnCallExpr(ident Ident) FnCallExpr {
 			panic("error: too many argument")
 		}
 	}
-	p.check(RParen)
 	return FnCallExpr{args: args, ident: ident}
 }
 
@@ -462,6 +533,12 @@ func (e Eval) stmt(stmt Stmt) Object {
 		return v
 	case ExprStmt:
 		return e.expr(s.val)
+	case LoopStmt:
+		for {
+			for _, line := range s.block {
+				e.stmt(line)
+			}
+		}
 	}
 	panic("error")
 }
@@ -504,6 +581,11 @@ func (e Eval) expr(expr Expr) Object {
 			} else {
 				serial.write('0')
 			}
+		case "sleep":
+			t := time.Duration(e.expr(v.args[0]).(Integer).value) * time.Second
+			time.Sleep(t)
+		case "print":
+			fmt.Println(e.expr(v.args[0]).stringVal())
 		}
 		return Nil{}
 	}
@@ -543,10 +625,13 @@ func repl(port string) {
 	fmt.Print(">> ")
 	for stdin.Scan() {
 		text := stdin.Text()
+		if text == "exit" {
+			break
+		}
 		tokenizer := newTokenizer(text)
 		p := NewParser(tokenizer)
 		stmt := p.stmt()
-		fmt.Println(e.eval(stmt).stringVal())
+		fmt.Println("=> " + e.eval(stmt).stringVal())
 		fmt.Print(">> ")
 	}
 }

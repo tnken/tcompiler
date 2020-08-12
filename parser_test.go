@@ -17,6 +17,7 @@ func TestParser(t *testing.T) {
 		{"[1+2*3, 2, [1, 2]]", "[(1 + (2 * 3)) 2 [1 2]]"},
 		{"a = 1", "a = 1"},
 		{"testfn(1+2*3)", "testfn((1 + (2 * 3)))"},
+		{"loop { print(3) }", "loop { print(3) }"},
 	}
 
 	for _, c := range cases {
