@@ -23,7 +23,7 @@ func TestEval(t *testing.T) {
 	e := newEval(port)
 	for _, c := range cases {
 		tokenizer := newTokenizer(c.input)
-		p := NewParser(tokenizer)
+		p := newParser(tokenizer)
 		stmt := p.stmt()
 		if e.eval(stmt).stringVal() != c.expected {
 			t.Error("The evaluate result is wrong\n")

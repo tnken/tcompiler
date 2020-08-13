@@ -22,7 +22,7 @@ func TestParser(t *testing.T) {
 
 	for _, c := range cases {
 		tokenizer := newTokenizer(c.input)
-		p := NewParser(tokenizer)
+		p := newParser(tokenizer)
 		stmt := p.stmt()
 		fmt.Println("expected: " + stmt.string() + ", actual: " + c.expected)
 		if stmt.string() != c.expected {
