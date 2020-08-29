@@ -26,10 +26,10 @@ type Stmt interface {
 
 // For Debugging
 // Ignore
-func (i InfixExpr) nodeExpr()       {}
-func (nl IntegerLiteral) nodeExpr() {}
-func (i IdentExpr) nodeExpr()       {}
-func (ls LoopStmt) nodeStmt()       {}
+func (i InfixExpr) nodeExpr()      {}
+func (i IntegerLiteral) nodeExpr() {}
+func (i IdentExpr) nodeExpr()      {}
+func (l LoopStmt) nodeStmt()       {}
 
 //
 // Expr
@@ -64,8 +64,8 @@ type IntegerLiteral struct {
 	val int
 }
 
-func (nl IntegerLiteral) string() string {
-	return strconv.Itoa(nl.val)
+func (i IntegerLiteral) string() string {
+	return strconv.Itoa(i.val)
 }
 
 // IdentKind show kind of the Identifier as enum
@@ -95,9 +95,9 @@ type LoopStmt struct {
 	block []Stmt
 }
 
-func (ls LoopStmt) string() string {
+func (l LoopStmt) string() string {
 	s := "loop {"
-	for _, b := range ls.block {
+	for _, b := range l.block {
 		s += " " + b.string()
 	}
 	return s + " }"

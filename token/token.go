@@ -8,7 +8,7 @@ type Tokenizer struct {
 	pos   int
 }
 
-// New initialize an Tokenizer and returns its pointer
+// New initialize a Tokenizer and returns its pointer
 func New(input string) *Tokenizer {
 	return &Tokenizer{input, 0}
 }
@@ -47,7 +47,7 @@ func (t *Tokenizer) lexSpaces() {
 	t.recognizeMany(func(b byte) bool { return (strings.IndexByte(" \n\t", b) > -1) })
 }
 
-// Next returns an Token and move forward current position
+// Next returns a Token and move forward current position
 func (t *Tokenizer) Next() Token {
 	// TODO: Refactoring from LL:51 to LL:62
 	if t.pos >= len(t.input) {
@@ -103,10 +103,10 @@ func (t *Tokenizer) Next() Token {
 	return t.newToken(EOF, "")
 }
 
-// Kind express kind of the token as enum
+// Kind express the token kind as enum
 type Kind int
 
-// Define Kind as enum
+// Define Token Kind as enum
 const (
 	Num      Kind = iota // 0 - 9
 	Plus                 // +
