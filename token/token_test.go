@@ -57,9 +57,9 @@ func TestTokenizer(t *testing.T) {
 		{Rbrace, "}"},
 		{EOF, ""},
 	}
-	tokenizer := newTokenizer(input1)
+	tokenizer := New(input1)
 	for _, c := range case1 {
-		token := tokenizer.next()
+		token := tokenizer.Next()
 		if token.Kind != c.expectKind {
 			t.Error("The token kind is wrong\n")
 		}
@@ -89,9 +89,9 @@ func TestTokenizer(t *testing.T) {
 		{Rbracket, "]"},
 		{EOF, ""},
 	}
-	tokenizer = newTokenizer(input2)
+	tokenizer = New(input2)
 	for _, c := range case2 {
-		token := tokenizer.next()
+		token := tokenizer.Next()
 		if token.Kind != c.expectKind {
 			t.Error("The token kind is wrong\n")
 		}

@@ -8,7 +8,8 @@ type Tokenizer struct {
 	pos   int
 }
 
-func newTokenizer(input string) *Tokenizer {
+// New initialize an Tokenizer and returns its pointer
+func New(input string) *Tokenizer {
 	return &Tokenizer{input, 0}
 }
 
@@ -46,12 +47,14 @@ func (t *Tokenizer) lexSpaces() {
 	t.recognizeMany(func(b byte) bool { return (strings.IndexByte(" \n\t", b) > -1) })
 }
 
-func (t *Tokenizer) next() Token {
-	// TODO: Refactor from LL:50~LL:62
+// Next returns an Token and move forward current position
+func (t *Tokenizer) Next() Token {
+	// TODO: Refactoring from LL:51 to LL:62
 	if t.pos >= len(t.input) {
 		return t.newToken(EOF, "")
 	}
 	ch := t.input[t.pos]
+
 	if ch == ' ' || ch == '\t' || ch == '\n' {
 		t.lexSpaces()
 	}
@@ -126,14 +129,10 @@ const (
 )
 
 var reserved = []string{
-	"do",
-	"end",
 	"loop",
 }
 
 var reservedToKind = map[string]Kind{
-	"do":   KeyDo,
-	"end":  KeyEnd,
 	"loop": KeyLoop,
 }
 
@@ -156,8 +155,6 @@ type Token struct {
 }
 
 func (t *Tokenizer) newToken(tk Kind, lit string) Token {
-	for i := 0; i < len(lit); i++ {
-		t.pos++
-	}
+	t.pos += len(lit)
 	return Token{tk, lit}
 }
