@@ -60,12 +60,12 @@ func (i InfixExpr) string() string {
 
 // IntegerLiteral express unsigned number
 type IntegerLiteral struct {
-	tok token.Token
-	val int
+	Tok token.Token
+	Val int
 }
 
 func (i IntegerLiteral) string() string {
-	return strconv.Itoa(i.val)
+	return strconv.Itoa(i.Val)
 }
 
 // IdentKind show kind of the Identifier as enum
