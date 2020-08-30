@@ -35,6 +35,14 @@ func (p *Parser) consume(s string) bool {
 	return false
 }
 
+func (p *Parser) program() []Node {
+	program := []Node{}
+	for p.curToken.Kind != token.EOF {
+		program = append(program, p.stmt())
+	}
+	return program
+}
+
 func (p *Parser) stmt() Node {
 	return p.expr()
 }
