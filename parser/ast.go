@@ -39,23 +39,23 @@ func (l LoopStmt) nodeStmt()       {}
 type OpKind int
 
 const (
-	opAdd OpKind = iota
-	opSub
-	opMul
-	opDiv
+	Add OpKind = iota
+	Sub
+	Mul
+	Div
 )
 
 // InfixExpr has a operand and two nodes.
 type InfixExpr struct {
 	tok   token.Token
-	op    OpKind
-	left  Node
-	right Node
+	Op    OpKind
+	Left  Node
+	Right Node
 }
 
 func (i InfixExpr) string() string {
 	fmt.Println(i.tok)
-	return "(" + i.left.string() + " " + i.tok.Literal + " " + i.right.string() + ")"
+	return "(" + i.Left.string() + " " + i.tok.Literal + " " + i.Right.string() + ")"
 }
 
 // IntegerLiteral express unsigned number

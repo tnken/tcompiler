@@ -57,9 +57,9 @@ func (p *Parser) add() Node {
 	tok := p.curToken
 	for {
 		if p.consume("+") {
-			node = InfixExpr{tok, opAdd, node, p.mul()}
+			node = InfixExpr{tok, Add, node, p.mul()}
 		} else if p.consume("-") {
-			node = InfixExpr{tok, opSub, node, p.mul()}
+			node = InfixExpr{tok, Sub, node, p.mul()}
 		} else {
 			return node
 		}
@@ -67,20 +67,20 @@ func (p *Parser) add() Node {
 }
 
 func (p *Parser) mul() Node {
-	node := p.primary()
+	node := p.prim()
 	tok := p.curToken
 	for {
 		if p.consume("*") {
-			node = InfixExpr{tok, opMul, node, p.primary()}
+			node = InfixExpr{tok, Mul, node, p.prim()}
 		} else if p.consume("/") {
-			node = InfixExpr{tok, opDiv, node, p.primary()}
+			node = InfixExpr{tok, Div, node, p.prim()}
 		} else {
 			return node
 		}
 	}
 }
 
-func (p *Parser) primary() Node {
+func (p *Parser) prim() Node {
 	return p.newIntegerLiteral()
 }
 
