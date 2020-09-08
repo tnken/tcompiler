@@ -78,11 +78,11 @@ const (
 // IdentExpr has kind and name
 type IdentExpr struct {
 	kind IdentKind
-	name string
+	Name string
 }
 
 func (i IdentExpr) string() string {
-	return i.name
+	return i.Name
 }
 
 //
@@ -90,7 +90,7 @@ func (i IdentExpr) string() string {
 //
 
 type AssignStmt struct {
-	Ident Node
+	Ident IdentExpr
 	Expr  Node
 }
 

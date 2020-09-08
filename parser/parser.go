@@ -52,7 +52,7 @@ func (p *Parser) assign() Node {
 	switch node.(type) {
 	case IdentExpr:
 		if p.consume("=") {
-			return AssignStmt{node, p.expr()}
+			return AssignStmt{node.(IdentExpr), p.expr()}
 		}
 	}
 	return node

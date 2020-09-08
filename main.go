@@ -15,5 +15,5 @@ func main() {
 	}
 	tok := token.New(os.Args[1])
 	parser := parser.New(tok)
-	Program(parser.Program())
+	Compile(parser.Program())
 }
