@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/takeru56/t/token"
@@ -30,6 +29,7 @@ func (i InfixExpr) nodeExpr()      {}
 func (i IntegerLiteral) nodeExpr() {}
 func (i IdentExpr) nodeExpr()      {}
 func (l LoopStmt) nodeStmt()       {}
+func (a AssignStmt) nodeStmt()     {}
 
 //
 // Expr
@@ -54,7 +54,6 @@ type InfixExpr struct {
 }
 
 func (i InfixExpr) string() string {
-	fmt.Println(i.tok)
 	return "(" + i.Left.string() + " " + i.tok.Literal + " " + i.Right.string() + ")"
 }
 
@@ -89,6 +88,15 @@ func (i IdentExpr) string() string {
 //
 // Stmt
 //
+
+type AssignStmt struct {
+	Ident Node
+	Expr  Node
+}
+
+func (a AssignStmt) string() string {
+	return a.Ident.string() + " = " + a.Expr.string()
+}
 
 // LoopStmt has a block
 type LoopStmt struct {

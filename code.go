@@ -18,6 +18,8 @@ const (
 	OpMul
 	OpDiv
 	OpDone
+	OpLoadGlobal
+	OpStoreGlobal
 )
 
 // Definition consits of Name and OperandWidths property
@@ -27,12 +29,14 @@ type Definition struct {
 }
 
 var definitions = map[Opcode]*Definition{
-	OpConstant: {"OpConstant", []int{2}},
-	OpAdd:      {"OpAdd", []int{}},
-	OpSub:      {"OpSub", []int{}},
-	OpMul:      {"OpMul", []int{}},
-	OpDiv:      {"OpDiv", []int{}},
-	OpDone:     {"OpDone", []int{}},
+	OpConstant:    {"OpConstant", []int{2}},
+	OpAdd:         {"OpAdd", []int{}},
+	OpSub:         {"OpSub", []int{}},
+	OpMul:         {"OpMul", []int{}},
+	OpDiv:         {"OpDiv", []int{}},
+	OpDone:        {"OpDone", []int{}},
+	OpLoadGlobal:  {"OpLoadGlobal", []int{1}},
+	OpStoreGlobal: {"OpStoreGlobal", []int{1}},
 }
 
 // Lookup finds Definition of Opcode

@@ -44,7 +44,18 @@ func (p *Parser) Program() []Node {
 }
 
 func (p *Parser) stmt() Node {
-	return p.expr()
+	return p.assign()
+}
+
+func (p *Parser) assign() Node {
+	node := p.expr()
+	switch node.(type) {
+	case IdentExpr:
+		if p.consume("=") {
+			return AssignStmt{node, p.expr()}
+		}
+	}
+	return node
 }
 
 func (p *Parser) expr() Node {
@@ -80,13 +91,29 @@ func (p *Parser) mul() Node {
 	}
 }
 
+// prim ::= atom |
 func (p *Parser) prim() Node {
-	return p.newIntegerLiteral()
+	return p.atom()
+}
+
+// atom ::= IntegerLiteral | Identifier
+func (p *Parser) atom() Node {
+	switch p.curToken.Kind {
+	case token.Num:
+		return p.newIntegerLiteral()
+	}
+	return p.newIdentifier()
 }
 
 func (p *Parser) newIntegerLiteral() Node {
 	val, _ := strconv.Atoi(p.curToken.Literal)
 	node := IntegerLiteral{p.curToken, val}
+	p.nextToken()
+	return node
+}
+
+func (p *Parser) newIdentifier() Node {
+	node := IdentExpr{variable, p.curToken.Literal}
 	p.nextToken()
 	return node
 }
