@@ -18,6 +18,10 @@ const (
 	OpMul
 	OpDiv
 	OpDone
+	OpEQ
+	OpNEQ
+	OpLess
+	OpGreater
 	OpLoadGlobal
 	OpStoreGlobal
 )
@@ -35,6 +39,10 @@ var definitions = map[Opcode]*Definition{
 	OpMul:         {"OpMul", []int{}},
 	OpDiv:         {"OpDiv", []int{}},
 	OpDone:        {"OpDone", []int{}},
+	OpEQ:          {"OpEQ", []int{}},
+	OpNEQ:         {"OpNEQ", []int{}},
+	OpLess:        {"OpLess", []int{}},
+	OpGreater:     {"OpGreater", []int{}},
 	OpLoadGlobal:  {"OpLoadGlobal", []int{1}},
 	OpStoreGlobal: {"OpStoreGlobal", []int{1}},
 }

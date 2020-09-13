@@ -44,6 +44,14 @@ func (c *Compiler) gen(node parser.Node) {
 			emit(OpMul, []int{}...)
 		case parser.Div:
 			emit(OpDiv, []int{}...)
+		case parser.EQ:
+			emit(OpEQ, []int{}...)
+		case parser.NEQ:
+			emit(OpNEQ, []int{}...)
+		case parser.Less:
+			emit(OpLess, []int{}...)
+		case parser.Greater:
+			emit(OpGreater, []int{}...)
 		}
 	case parser.IdentExpr:
 		symbol, ok := c.symbolTable.Resolve(node.Name)

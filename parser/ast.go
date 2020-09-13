@@ -43,6 +43,10 @@ const (
 	Sub
 	Mul
 	Div
+	EQ
+	NEQ
+	Less
+	Greater
 )
 
 // InfixExpr has a operand and two nodes.

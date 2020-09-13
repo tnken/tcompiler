@@ -59,8 +59,36 @@ func (p *Parser) assign() Node {
 }
 
 func (p *Parser) expr() Node {
-	node := p.add()
+	node := p.eq()
 	return node
+}
+
+func (p *Parser) eq() Node {
+	node := p.compare()
+	tok := p.curToken
+	for {
+		if p.consume("==") {
+			node = InfixExpr{tok, EQ, node, p.compare()}
+		} else if p.consume("!=") {
+			node = InfixExpr{tok, NEQ, node, p.compare()}
+		} else {
+			return node
+		}
+	}
+}
+
+func (p *Parser) compare() Node {
+	node := p.add()
+	tok := p.curToken
+	for {
+		if p.consume("<") {
+			node = InfixExpr{tok, Less, node, p.add()}
+		} else if p.consume(">") {
+			node = InfixExpr{tok, Greater, node, p.add()}
+		} else {
+			return node
+		}
+	}
 }
 
 func (p *Parser) add() Node {

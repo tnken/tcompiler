@@ -13,6 +13,8 @@ func TestTokenizer(t *testing.T) {
 			b = a
 			print(b)
 		}
+		a == 3
+		a != 3
 		`
 
 	case1 := []struct {
@@ -55,6 +57,12 @@ func TestTokenizer(t *testing.T) {
 		{Identifier, "b"},
 		{RParen, ")"},
 		{Rbrace, "}"},
+		{Identifier, "a"},
+		{Eq, "=="},
+		{Num, "3"},
+		{Identifier, "a"},
+		{NEq, "!="},
+		{Num, "3"},
 		{EOF, ""},
 	}
 	tokenizer := New(input1)

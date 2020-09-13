@@ -84,11 +84,22 @@ func (t *Tokenizer) Next() Token {
 	case ch == ',':
 		return t.newToken(Comma, string(ch))
 	case ch == '=':
+		if t.input[t.pos+1] == '=' {
+			return t.newToken(Eq, "==")
+		}
 		return t.newToken(Assign, string(ch))
 	case ch == '{':
 		return t.newToken(Lbrace, string(ch))
 	case ch == '}':
 		return t.newToken(Rbrace, string(ch))
+	case ch == '!':
+		if t.input[t.pos+1] == '=' {
+			return t.newToken(NEq, "!=")
+		}
+	case ch == '<':
+		return t.newToken(LessThan, string(ch))
+	case ch == '>':
+		return t.newToken(GreaterThan, string(ch))
 	case t.isReserved():
 		for _, v := range reserved {
 			if t.input[t.pos:t.pos+len(v)] == v {
@@ -108,19 +119,23 @@ type Kind int
 
 // Define Token Kind as enum
 const (
-	Num      Kind = iota // 0 - 9
-	Plus                 // +
-	Minus                // -
-	Asterisk             // *
-	Slash                // /
-	Lbracket             // [
-	Rbracket             // ]
-	LParen               // (
-	RParen               // )
-	Assign               // =
-	Comma                // ,
-	Lbrace               // {
-	Rbrace               // }
+	Num         Kind = iota // 0 - 9
+	Plus                    // +
+	Minus                   // -
+	Asterisk                // *
+	Slash                   // /
+	Lbracket                // [
+	Rbracket                // ]
+	LParen                  // (
+	RParen                  // )
+	Assign                  // =
+	Comma                   // ,
+	Lbrace                  // {
+	Rbrace                  // }
+	Eq                      // ==
+	NEq                     // !=
+	LessThan                // <
+	GreaterThan             // >
 	Identifier
 	EOF
 	KeyDo
