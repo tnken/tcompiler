@@ -3,9 +3,6 @@ package main
 import (
 	"log"
 	"os"
-
-	"github.com/takeru56/t/parser"
-	"github.com/takeru56/t/token"
 )
 
 func main() {
@@ -13,7 +10,7 @@ func main() {
 		log.Fatal("Missing argument error")
 		return
 	}
-	tok := token.New(os.Args[1])
-	parser := parser.New(tok)
+	tok := NewToken(os.Args[1])
+	parser := NewParser(tok)
 	Compile(parser.Program())
 }

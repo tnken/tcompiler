@@ -1,20 +1,18 @@
-package parser
+package main
 
 import (
 	"strconv"
-
-	"github.com/takeru56/t/token"
 )
 
 // Parser has the information of curToken and peekToken
 type Parser struct {
-	tokenizer *token.Tokenizer
-	curToken  token.Token
-	peekToken token.Token
+	tokenizer *Tokenizer
+	curToken  Token
+	peekToken Token
 }
 
 // New initialize a Parser and returns its pointer
-func New(t *token.Tokenizer) *Parser {
+func NewParser(t *Tokenizer) *Parser {
 	p := &Parser{tokenizer: t}
 	p.nextToken()
 	p.nextToken()
@@ -37,7 +35,7 @@ func (p *Parser) consume(s string) bool {
 
 func (p *Parser) Program() []Node {
 	program := []Node{}
-	for p.curToken.Kind != token.EOF {
+	for p.curToken.Kind != EOF {
 		program = append(program, p.stmt())
 	}
 	return program
@@ -127,7 +125,7 @@ func (p *Parser) prim() Node {
 // atom ::= IntegerLiteral | Identifier
 func (p *Parser) atom() Node {
 	switch p.curToken.Kind {
-	case token.Num:
+	case Num:
 		return p.newIntegerLiteral()
 	}
 	return p.newIdentifier()

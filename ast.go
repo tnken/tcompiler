@@ -1,9 +1,7 @@
-package parser
+package main
 
 import (
 	"strconv"
-
-	"github.com/takeru56/t/token"
 )
 
 // Node abstract Stmt and Expr
@@ -51,7 +49,7 @@ const (
 
 // InfixExpr has a operand and two nodes.
 type InfixExpr struct {
-	tok   token.Token
+	tok   Token
 	Op    OpKind
 	Left  Node
 	Right Node
@@ -63,7 +61,7 @@ func (i InfixExpr) string() string {
 
 // IntegerLiteral express unsigned number
 type IntegerLiteral struct {
-	Tok token.Token
+	Tok Token
 	Val int
 }
 

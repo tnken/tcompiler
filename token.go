@@ -1,4 +1,4 @@
-package token
+package main
 
 import "strings"
 
@@ -9,7 +9,7 @@ type Tokenizer struct {
 }
 
 // New initialize a Tokenizer and returns its pointer
-func New(input string) *Tokenizer {
+func NewToken(input string) *Tokenizer {
 	return &Tokenizer{input, 0}
 }
 

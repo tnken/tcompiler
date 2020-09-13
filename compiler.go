@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/takeru56/t/parser"
-	"github.com/takeru56/t/table"
 )
 
 func emit(op Opcode, operands ...int) {
@@ -15,51 +12,51 @@ func emit(op Opcode, operands ...int) {
 }
 
 type Compiler struct {
-	p           []parser.Node
-	symbolTable *table.SymbolTable
+	p           []Node
+	symbolTable *SymbolTable
 }
 
 // Compile generates bytecode
-func Compile(program []parser.Node) {
-	g := &Compiler{program, table.NewSymbolTable()}
+func Compile(program []Node) {
+	g := &Compiler{program, NewSymbolTable()}
 	for _, node := range program {
 		g.gen(node)
 	}
 	emit(OpDone, []int{}...)
 }
 
-func (c *Compiler) gen(node parser.Node) {
+func (c *Compiler) gen(node Node) {
 	switch node := node.(type) {
-	case parser.IntegerLiteral:
+	case IntegerLiteral:
 		emit(OpConstant, []int{node.Val}...)
-	case parser.InfixExpr:
+	case InfixExpr:
 		c.gen(node.Left)
 		c.gen(node.Right)
 		switch node.Op {
-		case parser.Add:
+		case Add:
 			emit(OpAdd, []int{}...)
-		case parser.Sub:
+		case Sub:
 			emit(OpSub, []int{}...)
-		case parser.Mul:
+		case Mul:
 			emit(OpMul, []int{}...)
-		case parser.Div:
+		case Div:
 			emit(OpDiv, []int{}...)
-		case parser.EQ:
+		case EQ:
 			emit(OpEQ, []int{}...)
-		case parser.NEQ:
+		case NEQ:
 			emit(OpNEQ, []int{}...)
-		case parser.Less:
+		case Less:
 			emit(OpLess, []int{}...)
-		case parser.Greater:
+		case Greater:
 			emit(OpGreater, []int{}...)
 		}
-	case parser.IdentExpr:
+	case IdentExpr:
 		symbol, ok := c.symbolTable.Resolve(node.Name)
 		if ok {
 			emit(OpLoadGlobal, []int{symbol.Index}...)
 		}
 		// TODO: do error handling, when ok is false
-	case parser.AssignStmt:
+	case AssignStmt:
 		c.gen(node.Expr)
 		global := c.symbolTable.Define(node.Ident.Name)
 		emit(OpStoreGlobal, []int{global.Index}...)

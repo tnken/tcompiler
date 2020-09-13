@@ -1,4 +1,4 @@
-package table
+package main
 
 type SymbolScope string
 

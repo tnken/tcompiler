@@ -1,10 +1,8 @@
-package parser
+package main
 
 import (
 	"fmt"
 	"testing"
-
-	"github.com/takeru56/t/token"
 )
 
 func TestParser(t *testing.T) {
@@ -19,8 +17,8 @@ func TestParser(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		tokenizer := token.New(c.input)
-		p := New(tokenizer)
+		tokenizer := NewToken(c.input)
+		p := NewParser(tokenizer)
 		stmt := p.stmt()
 		fmt.Println("actual: " + stmt.string() + ", expected: " + c.expected)
 		if stmt.string() != c.expected {
