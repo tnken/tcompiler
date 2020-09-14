@@ -28,6 +28,8 @@ func (i IntegerLiteral) nodeExpr() {}
 func (i IdentExpr) nodeExpr()      {}
 func (l LoopStmt) nodeStmt()       {}
 func (a AssignStmt) nodeStmt()     {}
+func (b BlockStmt) nodeStmt()      {}
+func (i IfStmt) nodeStmt()         {}
 
 //
 // Expr
@@ -98,6 +100,31 @@ type AssignStmt struct {
 
 func (a AssignStmt) string() string {
 	return a.Ident.string() + " = " + a.Expr.string()
+}
+
+type BlockStmt struct {
+	stmts []Node
+}
+
+func (b BlockStmt) string() string {
+	s := "do\n"
+	for _, stmt := range b.stmts {
+		s += "  " + stmt.string() + "\n"
+	}
+	return s + "end"
+}
+
+type IfStmt struct {
+	block     BlockStmt
+	condition Node
+}
+
+func (i IfStmt) string() string {
+	s := "if " + i.condition.string() + " then\n"
+	for _, stmt := range i.block.stmts {
+		s += "  " + stmt.string() + "\n"
+	}
+	return s + "end"
 }
 
 // LoopStmt has a block

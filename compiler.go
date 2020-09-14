@@ -60,5 +60,6 @@ func (c *Compiler) gen(node Node) {
 		c.gen(node.Expr)
 		global := c.symbolTable.Define(node.Ident.Name)
 		emit(OpStoreGlobal, []int{global.Index}...)
+	case IfStmt:
 	}
 }

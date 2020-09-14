@@ -14,6 +14,15 @@ func TestParser(t *testing.T) {
 		{"1+2*3", "(1 + (2 * 3))"},
 		{"1 * 2 + 3", "((1 * 2) + 3)"},
 		{"a=1+1", "a = (1 + 1)"},
+		{
+			`if 3>1 then
+  b = 3+5
+  b+2
+end`,
+			`if (3 > 1) then
+  b = (3 + 5)
+  (b + 2)
+end`},
 	}
 
 	for _, c := range cases {

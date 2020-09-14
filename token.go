@@ -138,17 +138,27 @@ const (
 	GreaterThan             // >
 	Identifier
 	EOF
+	KeyIf
 	KeyDo
+	KeyThen
 	KeyEnd
 	KeyLoop
 )
 
 var reserved = []string{
 	"loop",
+	"if",
+	"do",
+	"then",
+	"end",
 }
 
 var reservedToKind = map[string]Kind{
 	"loop": KeyLoop,
+	"if":   KeyIf,
+	"do":   KeyDo,
+	"then": KeyThen,
+	"end":  KeyEnd,
 }
 
 func (t Tokenizer) isReserved() bool {

@@ -42,6 +42,16 @@ func (p *Parser) Program() []Node {
 }
 
 func (p *Parser) stmt() Node {
+	if p.consume("if") {
+		block := BlockStmt{stmts: []Node{}}
+		node := p.expr()
+		// TODO: raise exception or return error if p.consume("***") returns false
+		p.consume("then")
+		for !p.consume("end") && p.curToken.Kind != EOF {
+			block.stmts = append(block.stmts, p.stmt())
+		}
+		return IfStmt{condition: node, block: block}
+	}
 	return p.assign()
 }
 

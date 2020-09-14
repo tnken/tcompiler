@@ -13,6 +13,9 @@ func TestTokenizer(t *testing.T) {
 			b = a
 			print(b)
 		}
+		if a > 0 then
+			b = 3
+		end
 		a == 3
 		a != 3
 		`
@@ -57,6 +60,15 @@ func TestTokenizer(t *testing.T) {
 		{Identifier, "b"},
 		{RParen, ")"},
 		{Rbrace, "}"},
+		{KeyIf, "if"},
+		{Identifier, "a"},
+		{GreaterThan, ">"},
+		{Num, "0"},
+		{KeyThen, "then"},
+		{Identifier, "b"},
+		{Assign, "="},
+		{Num, "3"},
+		{KeyEnd, "end"},
 		{Identifier, "a"},
 		{Eq, "=="},
 		{Num, "3"},
