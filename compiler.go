@@ -69,7 +69,7 @@ func (c *Compiler) gen(node Node) {
 			c.gen(stmt)
 		}
 		blockInstLength := len(c.instructions) - blockHead
-		ins := Make(OpJNT, []int{blockInstLength + 1}...)
+		ins := Make(OpJNT, []int{blockInstLength}...)
 
 		c.instructions[ifHead] = ins[0]
 		c.instructions[ifHead+1] = ins[1]
