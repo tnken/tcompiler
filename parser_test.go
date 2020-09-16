@@ -29,7 +29,6 @@ end`},
 		tokenizer := NewToken(c.input)
 		p := NewParser(tokenizer)
 		stmt := p.stmt()
-		fmt.Println("actual: " + stmt.string() + ", expected: " + c.expected)
 		if stmt.string() != c.expected {
 			fmt.Println(stmt.string())
 			t.Error("The ast is wrong\n")

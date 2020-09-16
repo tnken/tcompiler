@@ -1,65 +1,84 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
-func emit(op Opcode, operands ...int) {
+func (c *Compiler) emit(op Opcode, operands ...int) {
 	ins := Make(op, operands...)
 	for _, i := range ins {
-		fmt.Printf("%02x", i)
+		c.instructions = append(c.instructions, i)
 	}
 }
 
 type Compiler struct {
-	p           []Node
-	symbolTable *SymbolTable
+	p            []Node
+	instructions []byte
+	symbolTable  *SymbolTable
 }
 
 // Compile generates bytecode
-func Compile(program []Node) {
-	g := &Compiler{program, NewSymbolTable()}
+func Compile(program []Node) *Compiler {
+	c := &Compiler{program, []byte{}, NewSymbolTable()}
 	for _, node := range program {
-		g.gen(node)
+		c.gen(node)
 	}
-	emit(OpDone, []int{}...)
+	c.emit(OpDone, []int{}...)
+	return c
 }
 
 func (c *Compiler) gen(node Node) {
 	switch node := node.(type) {
 	case IntegerLiteral:
-		emit(OpConstant, []int{node.Val}...)
+		c.emit(OpConstant, []int{node.Val}...)
 	case InfixExpr:
 		c.gen(node.Left)
 		c.gen(node.Right)
 		switch node.Op {
 		case Add:
-			emit(OpAdd, []int{}...)
+			c.emit(OpAdd, []int{}...)
 		case Sub:
-			emit(OpSub, []int{}...)
+			c.emit(OpSub, []int{}...)
 		case Mul:
-			emit(OpMul, []int{}...)
+			c.emit(OpMul, []int{}...)
 		case Div:
-			emit(OpDiv, []int{}...)
+			c.emit(OpDiv, []int{}...)
 		case EQ:
-			emit(OpEQ, []int{}...)
+			c.emit(OpEQ, []int{}...)
 		case NEQ:
-			emit(OpNEQ, []int{}...)
+			c.emit(OpNEQ, []int{}...)
 		case Less:
-			emit(OpLess, []int{}...)
+			c.emit(OpLess, []int{}...)
 		case Greater:
-			emit(OpGreater, []int{}...)
+			c.emit(OpGreater, []int{}...)
 		}
 	case IdentExpr:
 		symbol, ok := c.symbolTable.Resolve(node.Name)
 		if ok {
-			emit(OpLoadGlobal, []int{symbol.Index}...)
+			c.emit(OpLoadGlobal, []int{symbol.Index}...)
 		}
 		// TODO: do error handling, when ok is false
 	case AssignStmt:
 		c.gen(node.Expr)
 		global := c.symbolTable.Define(node.Ident.Name)
-		emit(OpStoreGlobal, []int{global.Index}...)
+		c.emit(OpStoreGlobal, []int{global.Index}...)
 	case IfStmt:
+		c.gen(node.condition)
+		c.emit(OpJNT, []int{0}...)
+		blockHead := len(c.instructions)
+		ifHead := blockHead - 3
+		for _, stmt := range node.block.stmts {
+			c.gen(stmt)
+		}
+		blockInstLength := len(c.instructions) - blockHead
+		ins := Make(OpJNT, []int{blockInstLength + 1}...)
+
+		c.instructions[ifHead] = ins[0]
+		c.instructions[ifHead+1] = ins[1]
+		c.instructions[ifHead+2] = ins[2]
+	}
+}
+
+func (c *Compiler) output() {
+	for _, bytecode := range c.instructions {
+		fmt.Printf("%02x", bytecode)
 	}
 }

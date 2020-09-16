@@ -24,6 +24,7 @@ const (
 	OpGreater
 	OpLoadGlobal
 	OpStoreGlobal
+	OpJNT
 )
 
 // Definition consits of Name and OperandWidths property
@@ -45,6 +46,7 @@ var definitions = map[Opcode]*Definition{
 	OpGreater:     {"OpGreater", []int{}},
 	OpLoadGlobal:  {"OpLoadGlobal", []int{1}},
 	OpStoreGlobal: {"OpStoreGlobal", []int{1}},
+	OpJNT:         {"OpJNT", []int{2}}, // false → OpJNTの位置+[]int{2}の分飛ぶ
 }
 
 // Lookup finds Definition of Opcode
