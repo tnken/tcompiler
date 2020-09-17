@@ -143,6 +143,7 @@ const (
 	KeyThen
 	KeyEnd
 	KeyLoop
+	KeyWhile
 )
 
 var reserved = []string{
@@ -151,14 +152,16 @@ var reserved = []string{
 	"do",
 	"then",
 	"end",
+	"while",
 }
 
 var reservedToKind = map[string]Kind{
-	"loop": KeyLoop,
-	"if":   KeyIf,
-	"do":   KeyDo,
-	"then": KeyThen,
-	"end":  KeyEnd,
+	"loop":  KeyLoop,
+	"if":    KeyIf,
+	"do":    KeyDo,
+	"then":  KeyThen,
+	"end":   KeyEnd,
+	"while": KeyWhile,
 }
 
 func (t Tokenizer) isReserved() bool {

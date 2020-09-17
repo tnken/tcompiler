@@ -65,7 +65,7 @@ func (c *Compiler) gen(node Node) {
 		c.emit(OpJNT, []int{0}...)
 		blockHead := len(c.instructions)
 		ifHead := blockHead - 3
-		for _, stmt := range node.block.stmts {
+		for _, stmt := range node.block.nodes {
 			c.gen(stmt)
 		}
 		blockInstLength := len(c.instructions) - blockHead

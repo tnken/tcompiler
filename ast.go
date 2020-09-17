@@ -30,6 +30,7 @@ func (l LoopStmt) nodeStmt()       {}
 func (a AssignStmt) nodeStmt()     {}
 func (b BlockStmt) nodeStmt()      {}
 func (i IfStmt) nodeStmt()         {}
+func (i WhileStmt) nodeStmt()      {}
 
 //
 // Expr
@@ -103,12 +104,12 @@ func (a AssignStmt) string() string {
 }
 
 type BlockStmt struct {
-	stmts []Node
+	nodes []Node
 }
 
 func (b BlockStmt) string() string {
 	s := "do\n"
-	for _, stmt := range b.stmts {
+	for _, stmt := range b.nodes {
 		s += "  " + stmt.string() + "\n"
 	}
 	return s + "end"
@@ -121,8 +122,21 @@ type IfStmt struct {
 
 func (i IfStmt) string() string {
 	s := "if " + i.condition.string() + " then\n"
-	for _, stmt := range i.block.stmts {
-		s += "  " + stmt.string() + "\n"
+	for _, node := range i.block.nodes {
+		s += "  " + node.string() + "\n"
+	}
+	return s + "end"
+}
+
+type WhileStmt struct {
+	block     BlockStmt
+	condition Node
+}
+
+func (w WhileStmt) string() string {
+	s := "while " + w.condition.string() + " do\n"
+	for _, node := range w.block.nodes {
+		s += "  " + node.string() + "\n"
 	}
 	return s + "end"
 }

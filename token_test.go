@@ -18,6 +18,9 @@ func TestTokenizer(t *testing.T) {
 		end
 		a == 3
 		a != 3
+		while a > 10 do
+			a = a + 3
+		end
 		`
 
 	case1 := []struct {
@@ -75,6 +78,17 @@ func TestTokenizer(t *testing.T) {
 		{Identifier, "a"},
 		{NEq, "!="},
 		{Num, "3"},
+		{KeyWhile, "while"},
+		{Identifier, "a"},
+		{GreaterThan, ">"},
+		{Num, "10"},
+		{KeyDo, "do"},
+		{Identifier, "a"},
+		{Assign, "="},
+		{Identifier, "a"},
+		{Plus, "+"},
+		{Num, "3"},
+		{KeyEnd, "end"},
 		{EOF, ""},
 	}
 	tokenizer := NewToken(input1)

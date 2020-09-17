@@ -23,6 +23,15 @@ end`,
   b = (3 + 5)
   (b + 2)
 end`},
+		{
+			`while 3 > 1 do
+  b = 3+5
+  b+2
+end`,
+			`while (3 > 1) do
+  b = (3 + 5)
+  (b + 2)
+end`},
 	}
 
 	for _, c := range cases {
