@@ -58,6 +58,11 @@ func (c *Compiler) gen(node Node) {
 		// TODO: do error handling, when ok is false
 	case AssignStmt:
 		c.gen(node.Expr)
+		symbol, ok := c.symbolTable.Resolve(node.Ident.Name)
+		if ok {
+			c.emit(OpStoreGlobal, []int{symbol.Index}...)
+			return
+		}
 		global := c.symbolTable.Define(node.Ident.Name)
 		c.emit(OpStoreGlobal, []int{global.Index}...)
 	case IfStmt:
@@ -68,10 +73,8 @@ func (c *Compiler) gen(node Node) {
 		for _, stmt := range node.block.nodes {
 			c.gen(stmt)
 		}
-		blockInstLength := len(c.instructions) - blockHead
-		ins := Make(OpJNT, []int{blockInstLength}...)
+		ins := Make(OpJNT, []int{len(c.instructions)}...)
 
-		c.instructions[ifHead] = ins[0]
 		c.instructions[ifHead+1] = ins[1]
 		c.instructions[ifHead+2] = ins[2]
 	}
