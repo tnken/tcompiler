@@ -4,6 +4,10 @@ import (
 	"strconv"
 )
 
+//
+// Interface
+//
+
 // Node abstract Stmt and Expr
 type Node interface {
 	string() string

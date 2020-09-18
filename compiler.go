@@ -77,6 +77,20 @@ func (c *Compiler) gen(node Node) {
 
 		c.instructions[ifHead+1] = ins[1]
 		c.instructions[ifHead+2] = ins[2]
+	case WhileStmt:
+		head := len(c.instructions)
+		c.gen(node.condition)
+		c.emit(OpJNT, []int{0}...)
+		blockHead := len(c.instructions)
+		whileHead := blockHead - 3
+		for _, stmt := range node.block.nodes {
+			c.gen(stmt)
+		}
+		c.emit(OpJMP, []int{head}...)
+
+		ins := Make(OpJNT, []int{len(c.instructions)}...)
+		c.instructions[whileHead+1] = ins[1]
+		c.instructions[whileHead+2] = ins[2]
 	}
 }
 
