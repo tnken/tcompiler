@@ -1,18 +1,20 @@
-package main
+package parser
 
 import (
 	"strconv"
+
+	"github.com/takeru56/t/token"
 )
 
 // Parser has the information of curToken and peekToken
 type Parser struct {
-	tokenizer *Tokenizer
-	curToken  Token
-	peekToken Token
+	tokenizer *token.Tokenizer
+	curToken  token.Token
+	peekToken token.Token
 }
 
 // New initialize a Parser and returns its pointer
-func NewParser(t *Tokenizer) *Parser {
+func New(t *token.Tokenizer) *Parser {
 	p := &Parser{tokenizer: t}
 	p.nextToken()
 	p.nextToken()
@@ -35,7 +37,7 @@ func (p *Parser) consume(s string) bool {
 
 func (p *Parser) Program() []Node {
 	program := []Node{}
-	for p.curToken.Kind != EOF {
+	for p.curToken.Kind != token.EOF {
 		program = append(program, p.stmt())
 	}
 	return program
@@ -43,24 +45,24 @@ func (p *Parser) Program() []Node {
 
 func (p *Parser) stmt() Node {
 	if p.consume("if") {
-		block := BlockStmt{nodes: []Node{}}
+		block := BlockStmt{Nodes: []Node{}}
 		node := p.expr()
 		// TODO: raise exception or return error if p.consume("***") returns false
 		p.consume("then")
-		for !p.consume("end") && p.curToken.Kind != EOF {
-			block.nodes = append(block.nodes, p.stmt())
+		for !p.consume("end") && p.curToken.Kind != token.EOF {
+			block.Nodes = append(block.Nodes, p.stmt())
 		}
-		return IfStmt{condition: node, block: block}
+		return IfStmt{Condition: node, Block: block}
 	}
 
 	if p.consume("while") {
-		block := BlockStmt{nodes: []Node{}}
+		block := BlockStmt{Nodes: []Node{}}
 		node := p.expr()
 		p.consume("do")
-		for !p.consume("end") && p.curToken.Kind != EOF {
-			block.nodes = append(block.nodes, p.stmt())
+		for !p.consume("end") && p.curToken.Kind != token.EOF {
+			block.Nodes = append(block.Nodes, p.stmt())
 		}
-		return WhileStmt{condition: node, block: block}
+		return WhileStmt{Condition: node, Block: block}
 	}
 	return p.assign()
 }
@@ -145,7 +147,7 @@ func (p *Parser) prim() Node {
 // atom ::= IntegerLiteral | Identifier
 func (p *Parser) atom() Node {
 	switch p.curToken.Kind {
-	case Num:
+	case token.Num:
 		return p.newIntegerLiteral()
 	}
 	return p.newIdentifier()

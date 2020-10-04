@@ -1,9 +1,9 @@
-package main
+package compiler
 
 type SymbolScope string
 
 const (
-	GlobalScope SymbolScope = "GLOBA"
+	GlobalScope SymbolScope = "GLOBAL"
 )
 
 type Symbol struct {

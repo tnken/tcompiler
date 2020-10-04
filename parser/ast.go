@@ -1,7 +1,9 @@
-package main
+package parser
 
 import (
 	"strconv"
+
+	"github.com/takeru56/t/token"
 )
 
 //
@@ -56,7 +58,7 @@ const (
 
 // InfixExpr has a operand and two nodes.
 type InfixExpr struct {
-	tok   Token
+	tok   token.Token
 	Op    OpKind
 	Left  Node
 	Right Node
@@ -68,7 +70,7 @@ func (i InfixExpr) string() string {
 
 // IntegerLiteral express unsigned number
 type IntegerLiteral struct {
-	Tok Token
+	Tok token.Token
 	Val int
 }
 
@@ -108,38 +110,38 @@ func (a AssignStmt) string() string {
 }
 
 type BlockStmt struct {
-	nodes []Node
+	Nodes []Node
 }
 
 func (b BlockStmt) string() string {
 	s := "do\n"
-	for _, stmt := range b.nodes {
+	for _, stmt := range b.Nodes {
 		s += "  " + stmt.string() + "\n"
 	}
 	return s + "end"
 }
 
 type IfStmt struct {
-	block     BlockStmt
-	condition Node
+	Block     BlockStmt
+	Condition Node
 }
 
 func (i IfStmt) string() string {
-	s := "if " + i.condition.string() + " then\n"
-	for _, node := range i.block.nodes {
+	s := "if " + i.Condition.string() + " then\n"
+	for _, node := range i.Block.Nodes {
 		s += "  " + node.string() + "\n"
 	}
 	return s + "end"
 }
 
 type WhileStmt struct {
-	block     BlockStmt
-	condition Node
+	Block     BlockStmt
+	Condition Node
 }
 
 func (w WhileStmt) string() string {
-	s := "while " + w.condition.string() + " do\n"
-	for _, node := range w.block.nodes {
+	s := "while " + w.Condition.string() + " do\n"
+	for _, node := range w.Block.Nodes {
 		s += "  " + node.string() + "\n"
 	}
 	return s + "end"

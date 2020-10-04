@@ -1,4 +1,4 @@
-package main
+package compiler
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ func TestCompile(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out, err := exec.Command("go", "run", ".", c.source).Output()
+		out, err := exec.Command("go", "run", "../", c.source).Output()
 		if err != nil {
 			log.Fatal(err)
 		}

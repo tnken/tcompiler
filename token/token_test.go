@@ -1,4 +1,4 @@
-package main
+package token
 
 import (
 	"testing"
@@ -91,7 +91,7 @@ func TestTokenizer(t *testing.T) {
 		{KeyEnd, "end"},
 		{EOF, ""},
 	}
-	tokenizer := NewToken(input1)
+	tokenizer := New(input1)
 	for _, c := range case1 {
 		token := tokenizer.Next()
 		if token.Kind != c.expectKind {
@@ -123,7 +123,7 @@ func TestTokenizer(t *testing.T) {
 		{Rbracket, "]"},
 		{EOF, ""},
 	}
-	tokenizer = NewToken(input2)
+	tokenizer = New(input2)
 	for _, c := range case2 {
 		token := tokenizer.Next()
 		if token.Kind != c.expectKind {
