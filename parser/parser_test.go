@@ -38,8 +38,8 @@ end`},
 
 	for _, c := range cases {
 		tokenizer := token.New(c.input)
-		p := New(tokenizer)
-		stmt := p.stmt()
+		p, _ := New(tokenizer)
+		stmt, _ := p.stmt()
 		if stmt.string() != c.expected {
 			fmt.Println(stmt.string())
 			t.Error("The ast is wrong\n")

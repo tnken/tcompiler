@@ -13,128 +13,285 @@ type Parser struct {
 	peekToken token.Token
 }
 
+// type ParseErr struct {
+// 	Err error
+// 	L   token.Loc
+// }
+
+// // custom error
+// var (
+// 	ErrSyntax = errors.New("Syntax error: unexpected token")
+// )
+
+// func (pe *ParseErr) Error() string {
+// 	switch pe.Err {
+// 	case ErrSyntax:
+// 		return fmt.Sprintf("%v", pe.Err)
+// 	}
+// 	return pe.Err.Error()
+// }
+
 // New initialize a Parser and returns its pointer
-func New(t *token.Tokenizer) *Parser {
+func New(t *token.Tokenizer) (*Parser, error) {
 	p := &Parser{tokenizer: t}
-	p.nextToken()
-	p.nextToken()
-	return p
+	err := p.nextToken()
+	if err != nil {
+		return p, err
+	}
+	err = p.nextToken()
+	if err != nil {
+		return p, err
+	}
+	return p, nil
 }
 
 // nextToken advances forward curToken in the Parser
-func (p *Parser) nextToken() {
+func (p *Parser) nextToken() error {
 	p.curToken = p.peekToken
-	p.peekToken = p.tokenizer.Next()
-}
-
-func (p *Parser) consume(s string) bool {
-	if p.curToken.Literal == s {
-		p.nextToken()
-		return true
+	t, err := p.tokenizer.Next()
+	if err != nil {
+		return err
 	}
-	return false
+	p.peekToken = t
+	return nil
 }
 
-func (p *Parser) Program() []Node {
+func (p *Parser) consume(s string) (bool, error) {
+	if p.curToken.Literal == s {
+		err := p.nextToken()
+		if err != nil {
+			return true, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
+func (p *Parser) Program() ([]Node, error) {
 	program := []Node{}
 	for p.curToken.Kind != token.EOF {
-		program = append(program, p.stmt())
+		n, err := p.stmt()
+		if err != nil {
+			return nil, err
+		}
+		program = append(program, n)
 	}
-	return program
+	return program, nil
 }
 
-func (p *Parser) stmt() Node {
-	if p.consume("if") {
+func (p *Parser) stmt() (Node, error) {
+	f, err := p.consume("if")
+	if err != nil {
+		return IfStmt{}, err
+	}
+	if f {
 		block := BlockStmt{Nodes: []Node{}}
-		node := p.expr()
-		// TODO: raise exception or return error if p.consume("***") returns false
-		p.consume("then")
-		for !p.consume("end") && p.curToken.Kind != token.EOF {
-			block.Nodes = append(block.Nodes, p.stmt())
+		node, err := p.expr()
+		if err != nil {
+			return node, err
 		}
-		return IfStmt{Condition: node, Block: block}
+
+		_, err = p.consume("then")
+		if err != nil {
+			return IfStmt{}, err
+		}
+
+		for {
+			f, err = p.consume("end")
+			if err != nil {
+				return IfStmt{}, err
+			}
+			if f || p.curToken.Kind == token.EOF {
+				break
+			}
+
+			n, err := p.stmt()
+			if err != nil {
+				return IfStmt{}, err
+			}
+			block.Nodes = append(block.Nodes, n)
+		}
+		return IfStmt{Condition: node, Block: block}, nil
 	}
 
-	if p.consume("while") {
-		block := BlockStmt{Nodes: []Node{}}
-		node := p.expr()
-		p.consume("do")
-		for !p.consume("end") && p.curToken.Kind != token.EOF {
-			block.Nodes = append(block.Nodes, p.stmt())
-		}
-		return WhileStmt{Condition: node, Block: block}
+	f, err = p.consume("while")
+	if err != nil {
+		return WhileStmt{}, err
 	}
-	return p.assign()
+	if f {
+		block := BlockStmt{Nodes: []Node{}}
+		node, err := p.expr()
+		if err != nil {
+			return BlockStmt{}, err
+		}
+		_, err = p.consume("do")
+		if err != nil {
+			return BlockStmt{}, err
+		}
+
+		for {
+			f, err = p.consume("end")
+			if err != nil {
+				return WhileStmt{}, err
+			}
+			if f || p.curToken.Kind == token.EOF {
+				break
+			}
+
+			n, err := p.stmt()
+			if err != nil {
+				return WhileStmt{}, err
+			}
+			block.Nodes = append(block.Nodes, n)
+		}
+		return WhileStmt{Condition: node, Block: block}, nil
+	}
+	node, err := p.assign()
+	if err != nil {
+		return node, err
+	}
+	return node, nil
 }
 
-func (p *Parser) assign() Node {
-	node := p.expr()
+func (p *Parser) assign() (Node, error) {
+	node, err := p.expr()
+	if err != nil {
+		return node, err
+	}
 	switch node.(type) {
 	case IdentExpr:
-		if p.consume("=") {
-			return AssignStmt{node.(IdentExpr), p.expr()}
+		f, err := p.consume("=")
+		if err != nil {
+			return AssignStmt{}, err
+		}
+		if f {
+			n, err := p.expr()
+			if err != nil {
+				return AssignStmt{}, err
+			}
+			return AssignStmt{node.(IdentExpr), n}, nil
 		}
 	}
-	return node
+	return node, nil
 }
 
-func (p *Parser) expr() Node {
-	node := p.eq()
-	return node
+func (p *Parser) expr() (Node, error) {
+	node, err := p.eq()
+	if err != nil {
+		return node, err
+	}
+	return node, nil
 }
 
-func (p *Parser) eq() Node {
-	node := p.compare()
+func (p *Parser) eq() (Node, error) {
+	node, err := p.compare()
+	if err != nil {
+		return node, err
+	}
 	tok := p.curToken
 	for {
-		if p.consume("==") {
-			node = InfixExpr{tok, EQ, node, p.compare()}
-		} else if p.consume("!=") {
-			node = InfixExpr{tok, NEQ, node, p.compare()}
+		if f, err := p.consume("=="); f {
+			if err != nil {
+				return node, err
+			}
+			n, err := p.compare()
+			if err != nil {
+				return n, err
+			}
+			node = InfixExpr{tok, EQ, node, n}
+		} else if f, err := p.consume("!="); f {
+			if err != nil {
+				return node, err
+			}
+			n, err := p.compare()
+			if err != nil {
+				return n, err
+			}
+			node = InfixExpr{tok, NEQ, node, n}
 		} else {
-			return node
+			return node, nil
 		}
 	}
 }
 
-func (p *Parser) compare() Node {
-	node := p.add()
+func (p *Parser) compare() (Node, error) {
+	node, err := p.add()
+	if err != nil {
+		return node, err
+	}
 	tok := p.curToken
 	for {
-		if p.consume("<") {
-			node = InfixExpr{tok, Less, node, p.add()}
-		} else if p.consume(">") {
-			node = InfixExpr{tok, Greater, node, p.add()}
+		if f, err := p.consume("<"); f {
+			if err != nil {
+				return node, err
+			}
+			n, err := p.add()
+			if err != nil {
+				return node, err
+			}
+			node = InfixExpr{tok, Less, node, n}
+		} else if f, err := p.consume(">"); f {
+			if err != nil {
+				return node, err
+			}
+			n, err := p.add()
+			if err != nil {
+				return node, err
+			}
+			node = InfixExpr{tok, Greater, node, n}
 		} else {
-			return node
+			return node, nil
 		}
 	}
 }
 
-func (p *Parser) add() Node {
-	node := p.mul()
+func (p *Parser) add() (Node, error) {
+	node, err := p.mul()
+	if err != nil {
+		return node, err
+	}
 	tok := p.curToken
 	for {
-		if p.consume("+") {
-			node = InfixExpr{tok, Add, node, p.mul()}
-		} else if p.consume("-") {
-			node = InfixExpr{tok, Sub, node, p.mul()}
+		if f, err := p.consume("+"); f {
+			if err != nil {
+				return node, err
+			}
+			n, err := p.mul()
+			if err != nil {
+				return node, err
+			}
+			node = InfixExpr{tok, Add, node, n}
+		} else if f, err := p.consume("-"); f {
+			if err != nil {
+				return node, err
+			}
+			n, err := p.mul()
+			if err != nil {
+				return node, err
+			}
+			node = InfixExpr{tok, Sub, node, n}
 		} else {
-			return node
+			return node, nil
 		}
 	}
 }
 
-func (p *Parser) mul() Node {
+func (p *Parser) mul() (Node, error) {
 	node := p.prim()
 	tok := p.curToken
 	for {
-		if p.consume("*") {
+		if f, err := p.consume("*"); f {
+			if err != nil {
+				return node, err
+			}
 			node = InfixExpr{tok, Mul, node, p.prim()}
-		} else if p.consume("/") {
+		} else if f, err := p.consume("/"); f {
+			if err != nil {
+				return node, err
+			}
 			node = InfixExpr{tok, Div, node, p.prim()}
 		} else {
-			return node
+			return node, nil
 		}
 	}
 }

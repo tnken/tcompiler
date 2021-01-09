@@ -1,11 +1,74 @@
 package token
 
-import "strings"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
 
 // Tokenizer has source code and read position
 type Tokenizer struct {
 	input string
 	pos   int
+}
+
+type TokenizeErr struct {
+	Err error
+	L   Loc
+	t   *Tokenizer
+}
+
+// custom error
+var (
+	ErrSyntax = errors.New("Syntax error, undefined token")
+)
+
+func (te *TokenizeErr) Error() string {
+	switch te.Err {
+	case ErrSyntax:
+		st, l := lineNum(te.t.input, te.L.Start)
+		line := displayLine(te.t.input, te.L.Start)
+		return fmt.Sprintf("%d:%d: %v\n%v", l, te.L.Start-st+1, te.Err, line)
+	}
+	return te.Err.Error()
+}
+
+// posは，s中のstart番目から始まるline行目の文字
+func lineNum(s string, pos int) (int, int) {
+	line := 1
+	start := 0
+	for i := 0; i < len(s); i++ {
+		// CF: 0x0A, CD: 0x0D
+		if s[i] == 10 || s[i] == 13 {
+			start = (i + 1)
+			line++
+		}
+
+		if i == pos {
+			break
+		}
+	}
+	return start, line
+}
+
+func displayLine(s string, pos int) string {
+	st, _ := lineNum(s, pos)
+	line := ""
+	i := st
+	for i < len(s) {
+		// CF: 0x0A, CD: 0x0D
+		if s[i] == 10 || s[i] == 13 {
+			break
+		}
+		line += s[i : i+1]
+		i++
+	}
+	line += "\n"
+	for j := 0; j < pos-st; j++ {
+		line += " "
+	}
+	line += "^\n"
+	return line
 }
 
 // New initialize a Tokenizer and returns its pointer
@@ -34,13 +97,13 @@ func isAlnum(b byte) bool {
 func (t *Tokenizer) lexNumber() Token {
 	start := t.pos
 	t.recognizeMany(isDigit)
-	return Token{Num, t.input[start:t.pos]}
+	return Token{Num, t.input[start:t.pos], Loc{start, t.pos}}
 }
 
 func (t *Tokenizer) lexIdent() Token {
 	start := t.pos
 	t.recognizeMany(isAlnum)
-	return Token{Identifier, t.input[start:t.pos]}
+	return Token{Identifier, t.input[start:t.pos], Loc{start, t.pos}}
 }
 
 func (t *Tokenizer) lexSpaces() {
@@ -48,10 +111,10 @@ func (t *Tokenizer) lexSpaces() {
 }
 
 // Next returns a Token and move forward current position
-func (t *Tokenizer) Next() Token {
+func (t *Tokenizer) Next() (Token, error) {
 	// TODO: Refactoring from LL:51 to LL:62
 	if t.pos >= len(t.input) {
-		return t.newToken(EOF, "")
+		return t.newToken(EOF, ""), nil
 	}
 	ch := t.input[t.pos]
 
@@ -60,58 +123,58 @@ func (t *Tokenizer) Next() Token {
 	}
 
 	if t.pos >= len(t.input) {
-		return t.newToken(EOF, "")
+		return t.newToken(EOF, ""), nil
 	}
 	ch = t.input[t.pos]
 
 	switch {
 	case ch == '+':
-		return t.newToken(Plus, string(ch))
+		return t.newToken(Plus, string(ch)), nil
 	case ch == '-':
-		return t.newToken(Minus, string(ch))
+		return t.newToken(Minus, string(ch)), nil
 	case ch == '*':
-		return t.newToken(Asterisk, string(ch))
+		return t.newToken(Asterisk, string(ch)), nil
 	case ch == '/':
-		return t.newToken(Slash, string(ch))
+		return t.newToken(Slash, string(ch)), nil
 	case ch == '[':
-		return t.newToken(Lbracket, string(ch))
+		return t.newToken(Lbracket, string(ch)), nil
 	case ch == ']':
-		return t.newToken(Rbracket, string(ch))
+		return t.newToken(Rbracket, string(ch)), nil
 	case ch == '(':
-		return t.newToken(LParen, string(ch))
+		return t.newToken(LParen, string(ch)), nil
 	case ch == ')':
-		return t.newToken(RParen, string(ch))
+		return t.newToken(RParen, string(ch)), nil
 	case ch == ',':
-		return t.newToken(Comma, string(ch))
+		return t.newToken(Comma, string(ch)), nil
 	case ch == '=':
 		if t.input[t.pos+1] == '=' {
-			return t.newToken(Eq, "==")
+			return t.newToken(Eq, "=="), nil
 		}
-		return t.newToken(Assign, string(ch))
+		return t.newToken(Assign, string(ch)), nil
 	case ch == '{':
-		return t.newToken(Lbrace, string(ch))
+		return t.newToken(Lbrace, string(ch)), nil
 	case ch == '}':
-		return t.newToken(Rbrace, string(ch))
+		return t.newToken(Rbrace, string(ch)), nil
 	case ch == '!':
 		if t.input[t.pos+1] == '=' {
-			return t.newToken(NEq, "!=")
+			return t.newToken(NEq, "!="), nil
 		}
 	case ch == '<':
-		return t.newToken(LessThan, string(ch))
+		return t.newToken(LessThan, string(ch)), nil
 	case ch == '>':
-		return t.newToken(GreaterThan, string(ch))
+		return t.newToken(GreaterThan, string(ch)), nil
 	case t.isReserved():
 		for _, v := range reserved {
 			if t.input[t.pos:t.pos+len(v)] == v {
-				return t.newToken(reservedToKind[t.input[t.pos:t.pos+len(v)]], t.input[t.pos:t.pos+len(v)])
+				return t.newToken(reservedToKind[t.input[t.pos:t.pos+len(v)]], t.input[t.pos:t.pos+len(v)]), nil
 			}
 		}
 	case isDigit(ch):
-		return t.lexNumber()
-	case isChar((ch)):
-		return t.lexIdent()
+		return t.lexNumber(), nil
+	case isChar(ch):
+		return t.lexIdent(), nil
 	}
-	return t.newToken(EOF, "")
+	return Token{}, &TokenizeErr{ErrSyntax, Loc{t.pos, t.pos}, t}
 }
 
 // Kind express the token kind as enum
@@ -180,9 +243,17 @@ func (t Tokenizer) isReserved() bool {
 type Token struct {
 	Kind    Kind
 	Literal string
+	Loc     Loc
+}
+
+// Loc express Line of code for token
+type Loc struct {
+	Start int
+	End   int
 }
 
 func (t *Tokenizer) newToken(tk Kind, lit string) Token {
+	start := t.pos
 	t.pos += len(lit)
-	return Token{tk, lit}
+	return Token{tk, lit, Loc{start, t.pos}}
 }

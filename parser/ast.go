@@ -28,7 +28,6 @@ type Stmt interface {
 }
 
 // For Debugging
-// Ignore
 func (i InfixExpr) nodeExpr()      {}
 func (i IntegerLiteral) nodeExpr() {}
 func (i IdentExpr) nodeExpr()      {}

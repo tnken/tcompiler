@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -13,9 +14,26 @@ func main() {
 	if len(os.Args) < 2 {
 		log.Fatal("Missing argument error")
 	}
-
-	tok := token.New(os.Args[1])
-	parser := parser.New(tok)
-	c := compiler.Exec(parser.Program())
+	// from file
+	// bytes, err := ioutil.ReadFile("in.txt")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	source := os.Args[1]
+	tok := token.New(source)
+	parser, err := parser.New(tok)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	p, err := parser.Program()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	c := compiler.Exec(p)
 	c.Output()
+}
+
+func displayErrMessage(e error) {
 }
