@@ -34,6 +34,3 @@ func main() {
 	c := compiler.Exec(p)
 	c.Output()
 }
-
-func displayErrMessage(e error) {
-}
