@@ -3,6 +3,7 @@ package compiler
 import (
 	"fmt"
 
+	"github.com/takeru56/tcompiler/obj"
 	"github.com/takeru56/tcompiler/parser"
 )
 
