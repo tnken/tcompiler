@@ -11,11 +11,16 @@ const (
 type Object interface {
 	Type() ObjectType
 	Inspect() string
+	Size() int
 }
 
 type Integer struct {
 	Value int
 }
 
-func (i *Integer) Inspect() string { return fmt.Sprintf("%d", i.Value) }
-func (i *Integer) Type() string    { return INTEGER_OBJ }
+func (i *Integer) Type() ObjectType { return INTEGER_OBJ }
+func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
+
+// TODO: のちほど32bitに対応する
+// ひとまず2byte(16bit)で表現
+func (i *Integer) Size() int { return 2 }

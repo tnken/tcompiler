@@ -1,3 +1,3 @@
-module github.com/takeru56/t
+module github.com/takeru56/tcompiler
 
 go 1.14

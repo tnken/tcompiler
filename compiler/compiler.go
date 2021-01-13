@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/takeru56/tcompiler/obj"
@@ -16,13 +17,13 @@ func (c *Compiler) emit(op Opcode, operands ...int) {
 
 type Compiler struct {
 	p            []parser.Node
+	constantPool []obj.Object
 	instructions []byte
 	symbolTable  *SymbolTable
 }
 
-// Compile generates bytecode
 func Exec(program []parser.Node) *Compiler {
-	c := &Compiler{program, []byte{}, NewSymbolTable()}
+	c := &Compiler{program, []obj.Object{}, []byte{}, NewSymbolTable()}
 	for _, node := range program {
 		c.gen(node)
 	}
@@ -30,10 +31,16 @@ func Exec(program []parser.Node) *Compiler {
 	return c
 }
 
+func (c *Compiler) addConstant(obj obj.Object) int {
+	c.constantPool = append(c.constantPool, obj)
+	return len(c.constantPool)
+}
+
 func (c *Compiler) gen(n parser.Node) {
 	switch node := n.(type) {
 	case parser.IntegerLiteral:
-		c.emit(OpConstant, []int{node.Val}...)
+		integer := &obj.Integer{Value: node.Val}
+		c.emit(OpConstant, []int{c.addConstant(integer)}...)
 	case parser.InfixExpr:
 		c.gen(node.Left)
 		c.gen(node.Right)
@@ -99,7 +106,59 @@ func (c *Compiler) gen(n parser.Node) {
 	}
 }
 
+type ConstantType byte
+
+// Define Opcode
+const (
+	CONST_INT ConstantType = iota
+)
+
+func toUint16(num int) [2]byte {
+	b := [2]byte{}
+	binary.BigEndian.PutUint16(b[0:], uint16(num))
+	return b
+}
+
+// output tarto IR bytecode Format
+// ***************************************
+
+// struct {
+// 	u4 magic
+// 	u2 constant_pool_count
+// 	cp constant_pool[constant_pool_count]
+// 	u2 instruction_count
+// 	ins instructions[instruction_count]
+// }
+
+// struct constant_pool {
+// 	u1 constant type
+// 	u2 constant size
+// 	c [const size]constants
+// }
+// ***************************************
+
+// TODO: 32bitに拡張+エラー処理
 func (c *Compiler) Output() {
+	// u4 magic（特に意味無し）
+	fmt.Printf("%02x", []byte{255, 255, 255, 255})
+	// u2 constant_pool_count
+	fmt.Printf("%02x", toUint16(len(c.constantPool)))
+	// const pool
+	for _, constant := range c.constantPool {
+		switch constant := constant.(type) {
+		case *obj.Integer:
+			// u1
+			fmt.Printf("%02x", CONST_INT)
+			// u2
+			fmt.Printf("%02x", toUint16(constant.Size()))
+			// u2
+			fmt.Printf("%02x", toUint16(constant.Value))
+		}
+	}
+	// u2 instruction_count
+	fmt.Printf("%02x", toUint16(len(c.instructions)))
+
+	// instruction
 	for _, bytecode := range c.instructions {
 		fmt.Printf("%02x", bytecode)
 	}
