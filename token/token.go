@@ -3,6 +3,7 @@ package token
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -20,14 +21,18 @@ type TokenizeErr struct {
 
 // custom error
 var (
-	ErrSyntax = errors.New("Syntax error, undefined token")
+	ErrSyntax   = errors.New("Syntax error, undefined token")
+	ErrConstant = errors.New("constant not support")
 )
 
 func (te *TokenizeErr) Error() string {
+	st, l := lineNum(te.t.input, te.L.Start)
+	line := displayLine(te.t.input, te.L.Start)
+
 	switch te.Err {
 	case ErrSyntax:
-		st, l := lineNum(te.t.input, te.L.Start)
-		line := displayLine(te.t.input, te.L.Start)
+		return fmt.Sprintf("%d:%d: %v\n%v", l, te.L.Start-st+1, te.Err, line)
+	case ErrConstant:
 		return fmt.Sprintf("%d:%d: %v\n%v", l, te.L.Start-st+1, te.Err, line)
 	}
 	return te.Err.Error()
@@ -67,7 +72,7 @@ func displayLine(s string, pos int) string {
 	for j := 0; j < pos-st; j++ {
 		line += " "
 	}
-	line += "^\n"
+	line += "^"
 	return line
 }
 
@@ -170,7 +175,13 @@ func (t *Tokenizer) Next() (Token, error) {
 			}
 		}
 	case isDigit(ch):
-		return t.lexNumber(), nil
+		head := t.pos
+		tk := t.lexNumber()
+		val, err := strconv.Atoi(tk.Literal)
+		if err != nil || val < 0 || val >= 65536 {
+			return Token{}, &TokenizeErr{ErrConstant, Loc{head, t.pos}, t}
+		}
+		return tk, nil
 	case isChar(ch):
 		return t.lexIdent(), nil
 	}
