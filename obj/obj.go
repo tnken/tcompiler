@@ -1,0 +1,21 @@
+package obj
+
+import "fmt"
+
+type ObjectType string
+
+const (
+	INTEGER_OBJ = "INTEGER"
+)
+
+type Object interface {
+	Type() ObjectType
+	Inspect() string
+}
+
+type Integer struct {
+	Value int
+}
+
+func (i *Integer) Inspect() string { return fmt.Sprintf("%d", i.Value) }
+func (i *Integer) Type() string    { return INTEGER_OBJ }
