@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/takeru56/t/token"
+	"github.com/takeru56/tcompiler/token"
 )
 
 func TestParser(t *testing.T) {

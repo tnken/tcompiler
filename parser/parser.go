@@ -3,7 +3,7 @@ package parser
 import (
 	"strconv"
 
-	"github.com/takeru56/t/token"
+	"github.com/takeru56/tcompiler/token"
 )
 
 // Parser has the information of curToken and peekToken

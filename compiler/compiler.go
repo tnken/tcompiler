@@ -3,7 +3,7 @@ package compiler
 import (
 	"fmt"
 
-	"github.com/takeru56/t/parser"
+	"github.com/takeru56/tcompiler/parser"
 )
 
 func (c *Compiler) emit(op Opcode, operands ...int) {

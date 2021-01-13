@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/takeru56/t/compiler"
-	"github.com/takeru56/t/parser"
-	"github.com/takeru56/t/token"
+	"github.com/takeru56/tcompiler/compiler"
+	"github.com/takeru56/tcompiler/parser"
+	"github.com/takeru56/tcompiler/token"
 )
 
 func main() {
