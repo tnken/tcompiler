@@ -9,8 +9,8 @@ import (
 
 // Tokenizer has source code and read position
 type Tokenizer struct {
-	input string
-	pos   int
+	Input string
+	Pos   int
 }
 
 type TokenizeErr struct {
@@ -26,8 +26,8 @@ var (
 )
 
 func (te *TokenizeErr) Error() string {
-	st, l := lineNum(te.t.input, te.L.Start)
-	line := displayLine(te.t.input, te.L.Start)
+	st, l := lineNum(te.t.Input, te.L.Start)
+	line := displayLine(te.t.Input, te.L.Start)
 
 	switch te.Err {
 	case ErrSyntax:
@@ -82,8 +82,8 @@ func New(input string) *Tokenizer {
 }
 
 func (t *Tokenizer) recognizeMany(f func(byte) bool) {
-	for t.pos < len(t.input) && f(t.input[t.pos]) {
-		t.pos++
+	for t.Pos < len(t.Input) && f(t.Input[t.Pos]) {
+		t.Pos++
 	}
 }
 
@@ -100,15 +100,15 @@ func isAlnum(b byte) bool {
 }
 
 func (t *Tokenizer) lexNumber() Token {
-	start := t.pos
+	start := t.Pos
 	t.recognizeMany(isDigit)
-	return Token{Num, t.input[start:t.pos], Loc{start, t.pos}}
+	return Token{Num, t.Input[start:t.Pos], Loc{start, t.Pos}}
 }
 
 func (t *Tokenizer) lexIdent() Token {
-	start := t.pos
+	start := t.Pos
 	t.recognizeMany(isAlnum)
-	return Token{Identifier, t.input[start:t.pos], Loc{start, t.pos}}
+	return Token{Identifier, t.Input[start:t.Pos], Loc{start, t.Pos}}
 }
 
 func (t *Tokenizer) lexSpaces() {
@@ -118,19 +118,19 @@ func (t *Tokenizer) lexSpaces() {
 // Next returns a Token and move forward current position
 func (t *Tokenizer) Next() (Token, error) {
 	// TODO: Refactoring from LL:51 to LL:62
-	if t.pos >= len(t.input) {
+	if t.Pos >= len(t.Input) {
 		return t.newToken(EOF, ""), nil
 	}
-	ch := t.input[t.pos]
+	ch := t.Input[t.Pos]
 
 	if ch == ' ' || ch == '\t' || ch == '\n' {
 		t.lexSpaces()
 	}
 
-	if t.pos >= len(t.input) {
+	if t.Pos >= len(t.Input) {
 		return t.newToken(EOF, ""), nil
 	}
-	ch = t.input[t.pos]
+	ch = t.Input[t.Pos]
 
 	switch {
 	case ch == '+':
@@ -152,7 +152,7 @@ func (t *Tokenizer) Next() (Token, error) {
 	case ch == ',':
 		return t.newToken(Comma, string(ch)), nil
 	case ch == '=':
-		if t.input[t.pos+1] == '=' {
+		if t.Input[t.Pos+1] == '=' {
 			return t.newToken(Eq, "=="), nil
 		}
 		return t.newToken(Assign, string(ch)), nil
@@ -161,7 +161,7 @@ func (t *Tokenizer) Next() (Token, error) {
 	case ch == '}':
 		return t.newToken(Rbrace, string(ch)), nil
 	case ch == '!':
-		if t.input[t.pos+1] == '=' {
+		if t.Input[t.Pos+1] == '=' {
 			return t.newToken(NEq, "!="), nil
 		}
 	case ch == '<':
@@ -170,22 +170,22 @@ func (t *Tokenizer) Next() (Token, error) {
 		return t.newToken(GreaterThan, string(ch)), nil
 	case t.isReserved():
 		for _, v := range reserved {
-			if t.input[t.pos:t.pos+len(v)] == v {
-				return t.newToken(reservedToKind[t.input[t.pos:t.pos+len(v)]], t.input[t.pos:t.pos+len(v)]), nil
+			if t.Input[t.Pos:t.Pos+len(v)] == v {
+				return t.newToken(reservedToKind[t.Input[t.Pos:t.Pos+len(v)]], t.Input[t.Pos:t.Pos+len(v)]), nil
 			}
 		}
 	case isDigit(ch):
-		head := t.pos
+		head := t.Pos
 		tk := t.lexNumber()
 		val, err := strconv.Atoi(tk.Literal)
 		if err != nil || val < 0 || val >= 65536 {
-			return Token{}, &TokenizeErr{ErrConstant, Loc{head, t.pos}, t}
+			return Token{}, &TokenizeErr{ErrConstant, Loc{head, t.Pos}, t}
 		}
 		return tk, nil
 	case isChar(ch):
 		return t.lexIdent(), nil
 	}
-	return Token{}, &TokenizeErr{ErrSyntax, Loc{t.pos, t.pos}, t}
+	return Token{}, &TokenizeErr{ErrSyntax, Loc{t.Pos, t.Pos}, t}
 }
 
 // Kind express the token kind as enum
@@ -240,10 +240,10 @@ var reservedToKind = map[string]Kind{
 
 func (t Tokenizer) isReserved() bool {
 	for _, v := range reserved {
-		if len(t.input)-t.pos <= len(v) {
+		if len(t.Input)-t.Pos <= len(v) {
 			continue
 		}
-		if t.input[t.pos:t.pos+len(v)] == v {
+		if t.Input[t.Pos:t.Pos+len(v)] == v {
 			return true
 		}
 	}
@@ -264,7 +264,7 @@ type Loc struct {
 }
 
 func (t *Tokenizer) newToken(tk Kind, lit string) Token {
-	start := t.pos
-	t.pos += len(lit)
-	return Token{tk, lit, Loc{start, t.pos}}
+	start := t.Pos
+	t.Pos += len(lit)
+	return Token{tk, lit, Loc{start, t.Pos}}
 }

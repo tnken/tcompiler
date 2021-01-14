@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/takeru56/tcompiler/token"
@@ -13,23 +15,64 @@ type Parser struct {
 	peekToken token.Token
 }
 
-// type ParseErr struct {
-// 	Err error
-// 	L   token.Loc
-// }
+type ParseErr struct {
+	Err error
+	L   token.Loc
+	p   *Parser
+}
 
-// // custom error
-// var (
-// 	ErrSyntax = errors.New("Syntax error: unexpected token")
-// )
+// custom error
+var (
+	ErrSyntax = errors.New("Syntax error")
+)
 
-// func (pe *ParseErr) Error() string {
-// 	switch pe.Err {
-// 	case ErrSyntax:
-// 		return fmt.Sprintf("%v", pe.Err)
-// 	}
-// 	return pe.Err.Error()
-// }
+func (pe *ParseErr) Error() string {
+	st, l := lineNum(pe.p.tokenizer.Input, pe.L.Start)
+	line := displayLine(pe.p.tokenizer.Input, pe.L.Start)
+
+	switch pe.Err {
+	case ErrSyntax:
+		return fmt.Sprintf("%d:%d: %v\n%v", l, pe.L.Start-st+1, pe.Err, line)
+	}
+	return pe.Err.Error()
+}
+
+func lineNum(s string, pos int) (int, int) {
+	line := 1
+	start := 0
+	for i := 0; i < len(s); i++ {
+		// CF: 0x0A, CD: 0x0D
+		if s[i] == 10 || s[i] == 13 {
+			start = (i + 1)
+			line++
+		}
+
+		if i == pos {
+			break
+		}
+	}
+	return start, line
+}
+
+func displayLine(s string, pos int) string {
+	st, _ := lineNum(s, pos)
+	line := ""
+	i := st
+	for i < len(s) {
+		// CF: 0x0A, CD: 0x0D
+		if s[i] == 10 || s[i] == 13 {
+			break
+		}
+		line += s[i : i+1]
+		i++
+	}
+	line += "\n"
+	for j := 0; j < pos-st; j++ {
+		line += " "
+	}
+	line += "^"
+	return line
+}
 
 // New initialize a Parser and returns its pointer
 func New(t *token.Tokenizer) (*Parser, error) {
@@ -101,8 +144,11 @@ func (p *Parser) stmt() (Node, error) {
 			if err != nil {
 				return IfStmt{}, err
 			}
-			if f || p.curToken.Kind == token.EOF {
+			if f {
 				break
+			}
+			if p.curToken.Kind == token.EOF {
+				return IfStmt{}, &ParseErr{ErrSyntax, p.curToken.Loc, p}
 			}
 
 			n, err := p.stmt()
@@ -134,8 +180,11 @@ func (p *Parser) stmt() (Node, error) {
 			if err != nil {
 				return WhileStmt{}, err
 			}
-			if f || p.curToken.Kind == token.EOF {
+			if f {
 				break
+			}
+			if p.curToken.Kind == token.EOF {
+				return IfStmt{}, &ParseErr{ErrSyntax, p.curToken.Loc, p}
 			}
 
 			n, err := p.stmt()
