@@ -177,13 +177,14 @@ func (c *Compiler) Dump() {
 	size := 0
 	for p < len(b) {
 		if size%16 == 0 {
-			fmt.Print("\n")
+			if size != 0 {
+				fmt.Print("\n")
+			}
 			fmt.Printf("%02X: ", size)
 		}
 		if size%16 != 0 && size%8 == 0 {
 			fmt.Print(" ")
 		}
-		fmt.Print(b[p : p+2])
 		fmt.Print(b[p : p+2])
 		p += 2
 		size++
