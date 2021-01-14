@@ -88,7 +88,7 @@ func (t *Tokenizer) recognizeMany(f func(byte) bool) {
 }
 
 func isChar(b byte) bool {
-	return 'a' <= b && b <= 'z'
+	return ('a' <= b && b <= 'z') || ('A' <= b && b <= 'Z')
 }
 
 func isDigit(b byte) bool {
@@ -168,12 +168,6 @@ func (t *Tokenizer) Next() (Token, error) {
 		return t.newToken(LessThan, string(ch)), nil
 	case ch == '>':
 		return t.newToken(GreaterThan, string(ch)), nil
-	case t.isReserved():
-		for _, v := range reserved {
-			if t.Input[t.Pos:t.Pos+len(v)] == v {
-				return t.newToken(reservedToKind[t.Input[t.Pos:t.Pos+len(v)]], t.Input[t.Pos:t.Pos+len(v)]), nil
-			}
-		}
 	case isDigit(ch):
 		head := t.Pos
 		tk := t.lexNumber()
@@ -182,6 +176,16 @@ func (t *Tokenizer) Next() (Token, error) {
 			return Token{}, &TokenizeErr{ErrConstant, Loc{head, t.Pos}, t}
 		}
 		return tk, nil
+	case t.isReserved():
+		for _, v := range reserved {
+			blank := len(t.Input) - t.Pos
+			if blank < len(v) {
+				continue
+			}
+			if t.Input[t.Pos:t.Pos+len(v)] == v {
+				return t.newToken(reservedToKind[v], t.Input[t.Pos:t.Pos+len(v)]), nil
+			}
+		}
 	case isChar(ch):
 		return t.lexIdent(), nil
 	}
@@ -193,31 +197,32 @@ type Kind int
 
 // Define Token Kind as enum
 const (
-	Num         Kind = iota // 0 - 9
-	Plus                    // +
-	Minus                   // -
-	Asterisk                // *
-	Slash                   // /
-	Lbracket                // [
-	Rbracket                // ]
-	LParen                  // (
-	RParen                  // )
-	Assign                  // =
-	Comma                   // ,
-	Lbrace                  // {
-	Rbrace                  // }
-	Eq                      // ==
-	NEq                     // !=
-	LessThan                // <
-	GreaterThan             // >
-	Identifier
-	EOF
-	KeyIf
-	KeyDo
-	KeyThen
-	KeyEnd
-	KeyLoop
-	KeyWhile
+	Num         Kind = iota // 0: 0 - 9
+	Plus                    // 1: +
+	Minus                   // 2: -
+	Asterisk                // 3: *
+	Slash                   // 4: /
+	Lbracket                // 5: [
+	Rbracket                // 6: ]
+	LParen                  // 7: (
+	RParen                  // 8: )
+	Assign                  // 9: =
+	Comma                   // 10: ,
+	Lbrace                  // 11: {
+	Rbrace                  // 12: }
+	Eq                      // 13: ==
+	NEq                     // 14: !=
+	LessThan                // 15: <
+	GreaterThan             // 16: >
+	Identifier              // 17:
+	EOF                     // 18:
+	KeyIf                   // 19:
+	KeyDo                   // 20:
+	KeyThen                 // 21:
+	KeyEnd                  // 22:
+	KeyLoop                 // 23:
+	KeyWhile                // 24:
+	KeyDef                  // 25:
 )
 
 var reserved = []string{
@@ -227,6 +232,7 @@ var reserved = []string{
 	"then",
 	"end",
 	"while",
+	"def",
 }
 
 var reservedToKind = map[string]Kind{
@@ -236,11 +242,13 @@ var reservedToKind = map[string]Kind{
 	"then":  KeyThen,
 	"end":   KeyEnd,
 	"while": KeyWhile,
+	"def":   KeyDef,
 }
 
 func (t Tokenizer) isReserved() bool {
 	for _, v := range reserved {
-		if len(t.Input)-t.Pos <= len(v) {
+		blank := len(t.Input) - t.Pos
+		if blank < len(v) {
 			continue
 		}
 		if t.Input[t.Pos:t.Pos+len(v)] == v {

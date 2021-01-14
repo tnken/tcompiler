@@ -134,4 +134,29 @@ func TestTokenizer(t *testing.T) {
 			t.Error("The token literal is wrong\n")
 		}
 	}
+
+	input3 := "def myFunc() 33 end"
+	case3 := []struct {
+		expectKind    Kind
+		expectLiteral string
+	}{
+		{KeyDef, "def"},
+		{Identifier, "myFunc"},
+		{LParen, "("},
+		{RParen, ")"},
+		{Num, "33"},
+		{KeyEnd, "end"},
+		{EOF, ""},
+	}
+	tokenizer = New(input3)
+	for _, c := range case3 {
+		token, _ := tokenizer.Next()
+		if token.Kind != c.expectKind {
+			t.Error("The token kind is wrong\n")
+		}
+
+		if token.Literal != c.expectLiteral {
+			t.Error("The token literal is wrong\n")
+		}
+	}
 }
