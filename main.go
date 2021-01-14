@@ -33,4 +33,5 @@ func main() {
 	}
 	c := compiler.Exec(p)
 	c.Output()
+	// c.Dump()
 }
