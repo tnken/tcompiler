@@ -31,6 +31,7 @@ type Stmt interface {
 func (i InfixExpr) nodeExpr()      {}
 func (i IntegerLiteral) nodeExpr() {}
 func (i IdentExpr) nodeExpr()      {}
+func (c CallExpr) nodeExpr()       {}
 func (l LoopStmt) nodeStmt()       {}
 func (a AssignStmt) nodeStmt()     {}
 func (b BlockStmt) nodeStmt()      {}
@@ -94,6 +95,14 @@ type IdentExpr struct {
 
 func (i IdentExpr) string() string {
 	return i.Name
+}
+
+type CallExpr struct {
+	Ident IdentExpr
+}
+
+func (c CallExpr) string() string {
+	return c.Ident.Name + "()"
 }
 
 //

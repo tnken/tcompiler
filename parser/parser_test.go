@@ -10,48 +10,57 @@ import (
 func TestParser(t *testing.T) {
 	cases := []struct {
 		input    string
-		expected string
+		expected []string
 	}{
-		{"1", "1"},
-		{"1+2*3", "(1 + (2 * 3))"},
-		{"1 * 2 + 3", "((1 * 2) + 3)"},
-		{"a=1+1", "a = (1 + 1)"},
+		{"1", []string{"1"}},
+		{"1+2*3", []string{"(1 + (2 * 3))"}},
+		{"1 * 2 + 3", []string{"((1 * 2) + 3)"}},
+		{"a=1+1", []string{"a = (1 + 1)"}},
 		{
-			`if 3>1 then
+			`if 3>1 do
   b = 3+5
   b+2
 end`,
-			`if (3 > 1) then
+			[]string{`if (3 > 1) then
   b = (3 + 5)
   (b + 2)
-end`},
+end`}},
 		{
 			`while 3 > 1 do
   b = 3+5
   b+2
 end`,
-			`while (3 > 1) do
+			[]string{`while (3 > 1) do
   b = (3 + 5)
   (b + 2)
-end`},
+end`}},
 		{
 			`def myFunc()
   b = 1+1
   b+2
-end`,
-			`def myFunc()
+end
+myFunc()`,
+			[]string{`def myFunc()
   b = (1 + 1)
   (b + 2)
-end`},
+end`,
+				"myFunc()"}},
 	}
 
 	for _, c := range cases {
 		tokenizer := token.New(c.input)
 		p, _ := New(tokenizer)
-		stmt, _ := p.stmt()
-		if stmt.string() != c.expected {
-			fmt.Println(stmt.string())
-			t.Error("The ast is wrong\n")
+
+		i := 0
+		for p.curToken.Kind != token.EOF {
+			stmt, _ := p.stmt()
+			fmt.Println(p.curToken.Literal)
+			if stmt.string() != c.expected[i] {
+				fmt.Println("expecting: \n" + c.expected[i])
+				fmt.Println("but actual: \n" + stmt.string())
+				t.Error("The ast is wrong\n")
+			}
+			i++
 		}
 	}
 }

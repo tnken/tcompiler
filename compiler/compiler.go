@@ -1,6 +1,9 @@
 package compiler
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/takeru56/tcompiler/code"
 	"github.com/takeru56/tcompiler/obj"
 	"github.com/takeru56/tcompiler/parser"
@@ -87,8 +90,12 @@ func (c *Compiler) gen(n parser.Node) {
 		symbol, ok := c.symbolTable.Resolve(node.Name)
 		if ok {
 			c.emit(code.OpLoadGlobal, []int{symbol.Index}...)
+			return
 		}
 		// TODO: do error handling, when ok is false
+		fmt.Println("undefined variable")
+		os.Exit(1)
+
 	case parser.AssignStmt:
 		c.gen(node.Expr)
 		symbol, ok := c.symbolTable.Resolve(node.Ident.Name)
@@ -140,5 +147,15 @@ func (c *Compiler) gen(n parser.Node) {
 		}
 		global := c.symbolTable.Define(node.Ident.Name)
 		c.emit(code.OpStoreGlobal, []int{global.Index}...)
+	case parser.CallExpr:
+		symbol, ok := c.symbolTable.Resolve(node.Ident.Name)
+		if ok {
+			c.emit(code.OpCall, []int{symbol.Index}...)
+			return
+		}
+		// TODO: 未定義関数呼び出しのエラーハンドル
+		// ひとまず握りつぶす
+		fmt.Println("undefined function")
+		os.Exit(1)
 	}
 }

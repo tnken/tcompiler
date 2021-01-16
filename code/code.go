@@ -12,20 +12,21 @@ type Opcode byte
 
 // Define Opcode
 const (
-	OpConstant Opcode = iota
-	OpAdd
-	OpSub
-	OpMul
-	OpDiv
-	OpDone
-	OpEQ
-	OpNEQ
-	OpLess
-	OpGreater
-	OpLoadGlobal
-	OpStoreGlobal
-	OpJNT
-	OpJMP
+	OpConstant    Opcode = iota // 0
+	OpAdd                       // 1
+	OpSub                       // 2
+	OpMul                       // 3
+	OpDiv                       // 4
+	OpDone                      // 5
+	OpEQ                        // 6
+	OpNEQ                       // 7
+	OpLess                      // 8
+	OpGreater                   // 9
+	OpLoadGlobal                // 10
+	OpStoreGlobal               // 11
+	OpJNT                       // 12
+	OpJMP                       // 13
+	OpCall                      // 14
 )
 
 // Definition consits of Name and OperandWidths property
@@ -49,6 +50,7 @@ var definitions = map[Opcode]*Definition{
 	OpStoreGlobal: {"OpStoreGlobal", []int{1}},
 	OpJNT:         {"OpJNT", []int{2}}, // false → OpJNTの位置+[]int{2}の分飛ぶ
 	OpJMP:         {"OpJMP", []int{2}},
+	OpCall:        {"OpCall", []int{1}},
 }
 
 // Lookup finds Definition of Opcode

@@ -135,7 +135,7 @@ func TestTokenizer(t *testing.T) {
 		}
 	}
 
-	input3 := "def myFunc() 33 end"
+	input3 := "def myFunc() 33 end myFunc()"
 	case3 := []struct {
 		expectKind    Kind
 		expectLiteral string
@@ -146,6 +146,9 @@ func TestTokenizer(t *testing.T) {
 		{RParen, ")"},
 		{Num, "33"},
 		{KeyEnd, "end"},
+		{Identifier, "myFunc"},
+		{LParen, "("},
+		{RParen, ")"},
 		{EOF, ""},
 	}
 	tokenizer = New(input3)

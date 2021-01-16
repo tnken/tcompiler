@@ -178,7 +178,7 @@ func (p *Parser) stmt() (Node, error) {
 			return node, err
 		}
 
-		_, err = p.consume("then")
+		f, err = p.consume("do")
 		if err != nil {
 			return IfStmt{}, err
 		}
@@ -370,19 +370,30 @@ func (p *Parser) add() (Node, error) {
 }
 
 func (p *Parser) mul() (Node, error) {
-	node := p.prim()
+	node, err := p.prim()
+	if err != nil {
+		return node, err
+	}
 	tok := p.curToken
 	for {
 		if f, err := p.consume("*"); f {
 			if err != nil {
 				return node, err
 			}
-			node = InfixExpr{tok, Mul, node, p.prim()}
+			n, err := p.prim()
+			if err != nil {
+				return node, err
+			}
+			node = InfixExpr{tok, Mul, node, n}
 		} else if f, err := p.consume("/"); f {
 			if err != nil {
 				return node, err
 			}
-			node = InfixExpr{tok, Div, node, p.prim()}
+			n, err := p.prim()
+			if err != nil {
+				return node, err
+			}
+			node = InfixExpr{tok, Div, node, n}
 		} else {
 			return node, nil
 		}
@@ -390,17 +401,30 @@ func (p *Parser) mul() (Node, error) {
 }
 
 // prim ::= atom |
-func (p *Parser) prim() Node {
-	return p.atom()
+func (p *Parser) prim() (Node, error) {
+	node, err := p.atom()
+	return node, err
 }
 
 // atom ::= IntegerLiteral | Identifier
-func (p *Parser) atom() Node {
+func (p *Parser) atom() (Node, error) {
 	switch p.curToken.Kind {
 	case token.Num:
-		return p.newIntegerLiteral()
+		return p.newIntegerLiteral(), nil
+	case token.Identifier:
+		// CallExpr
+		if p.peekToken.Kind == token.LParen {
+			node := CallExpr{IdentExpr{variable, p.curToken.Literal}}
+			p.nextToken()
+			p.nextToken()
+			f, err := p.consume(")")
+			if err != nil || !f {
+				return node, &ParseErr{ErrSyntax, p.curToken.Loc, p}
+			}
+			return node, nil
+		}
 	}
-	return p.newValIdentifier()
+	return p.newValIdentifier(), nil
 }
 
 func (p *Parser) newIntegerLiteral() Node {
