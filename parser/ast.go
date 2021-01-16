@@ -35,7 +35,8 @@ func (l LoopStmt) nodeStmt()       {}
 func (a AssignStmt) nodeStmt()     {}
 func (b BlockStmt) nodeStmt()      {}
 func (i IfStmt) nodeStmt()         {}
-func (i WhileStmt) nodeStmt()      {}
+func (w WhileStmt) nodeStmt()      {}
+func (f FunctionDef) nodeStmt()    {}
 
 //
 // Expr
@@ -157,4 +158,17 @@ func (l LoopStmt) string() string {
 		s += " " + b.string()
 	}
 	return s + " }"
+}
+
+type FunctionDef struct {
+	Ident IdentExpr
+	Block BlockStmt
+}
+
+func (f FunctionDef) string() string {
+	s := "def " + f.Ident.Name + "()\n"
+	for _, b := range f.Block.Nodes {
+		s += "  " + b.string() + "\n"
+	}
+	return s + "end"
 }

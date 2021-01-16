@@ -34,6 +34,15 @@ end`,
   b = (3 + 5)
   (b + 2)
 end`},
+		{
+			`def myFunc()
+  b = 1+1
+  b+2
+end`,
+			`def myFunc()
+  b = (1 + 1)
+  (b + 2)
+end`},
 	}
 
 	for _, c := range cases {

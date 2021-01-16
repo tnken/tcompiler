@@ -123,7 +123,51 @@ func (p *Parser) Program() ([]Node, error) {
 }
 
 func (p *Parser) stmt() (Node, error) {
-	f, err := p.consume("if")
+	// parse functionDef
+	f, err := p.consume("def")
+	if err != nil {
+		return FunctionDef{}, err
+	}
+	if f {
+		// ident
+		ident, ok := p.newFnIdentifier().(IdentExpr)
+		if !ok {
+			return FunctionDef{}, &ParseErr{ErrSyntax, p.curToken.Loc, p}
+		}
+		// params
+		_, err := p.consume("(")
+		if err != nil {
+			return FunctionDef{}, err
+		}
+		_, err = p.consume(")")
+		if err != nil {
+			return FunctionDef{}, err
+		}
+
+		// block
+		block := BlockStmt{Nodes: []Node{}}
+		for {
+			f, err = p.consume("end")
+			if err != nil {
+				return FunctionDef{}, err
+			}
+			if f {
+				break
+			}
+			if p.curToken.Kind == token.EOF {
+				return FunctionDef{}, &ParseErr{ErrSyntax, p.curToken.Loc, p}
+			}
+
+			n, err := p.stmt()
+			if err != nil {
+				return FunctionDef{}, err
+			}
+			block.Nodes = append(block.Nodes, n)
+		}
+		return FunctionDef{ident, block}, nil
+	}
+
+	f, err = p.consume("if")
 	if err != nil {
 		return IfStmt{}, err
 	}
@@ -356,7 +400,7 @@ func (p *Parser) atom() Node {
 	case token.Num:
 		return p.newIntegerLiteral()
 	}
-	return p.newIdentifier()
+	return p.newValIdentifier()
 }
 
 func (p *Parser) newIntegerLiteral() Node {
@@ -366,8 +410,14 @@ func (p *Parser) newIntegerLiteral() Node {
 	return node
 }
 
-func (p *Parser) newIdentifier() Node {
+func (p *Parser) newValIdentifier() Node {
 	node := IdentExpr{variable, p.curToken.Literal}
+	p.nextToken()
+	return node
+}
+
+func (p *Parser) newFnIdentifier() Node {
+	node := IdentExpr{fn, p.curToken.Literal}
 	p.nextToken()
 	return node
 }

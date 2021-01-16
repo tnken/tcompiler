@@ -1,4 +1,4 @@
-package compiler
+package code
 
 import (
 	"encoding/binary"
