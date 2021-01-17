@@ -27,6 +27,7 @@ const (
 	OpJNT                       // 12
 	OpJMP                       // 13
 	OpCall                      // 14
+	OpReturn                    // 15
 )
 
 // Definition consits of Name and OperandWidths property
@@ -51,6 +52,7 @@ var definitions = map[Opcode]*Definition{
 	OpJNT:         {"OpJNT", []int{2}}, // false → OpJNTの位置+[]int{2}の分飛ぶ
 	OpJMP:         {"OpJMP", []int{2}},
 	OpCall:        {"OpCall", []int{1}},
+	OpReturn:      {"OpReturn", []int{}},
 }
 
 // Lookup finds Definition of Opcode

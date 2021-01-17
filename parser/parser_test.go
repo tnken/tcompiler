@@ -38,11 +38,13 @@ end`}},
 			`def myFunc()
   b = 1+1
   b+2
+  return b
 end
 myFunc()`,
 			[]string{`def myFunc()
   b = (1 + 1)
   (b + 2)
+  return b
 end`,
 				"myFunc()"}},
 	}

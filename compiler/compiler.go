@@ -157,5 +157,8 @@ func (c *Compiler) gen(n parser.Node) {
 		// ひとまず握りつぶす
 		fmt.Println("undefined function")
 		os.Exit(1)
+	case parser.ReturnStmt:
+		c.gen(node.Expr)
+		c.emit(code.OpReturn, []int{}...)
 	}
 }

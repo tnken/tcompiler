@@ -239,6 +239,19 @@ func (p *Parser) stmt() (Node, error) {
 		}
 		return WhileStmt{Condition: node, Block: block}, nil
 	}
+
+	f, err = p.consume("return")
+	if err != nil {
+		return ReturnStmt{}, err
+	}
+	if f {
+		node, err := p.expr()
+		if err != nil {
+			return node, err
+		}
+		return ReturnStmt{node}, nil
+	}
+
 	node, err := p.assign()
 	if err != nil {
 		return node, err

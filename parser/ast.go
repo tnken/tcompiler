@@ -38,6 +38,7 @@ func (b BlockStmt) nodeStmt()      {}
 func (i IfStmt) nodeStmt()         {}
 func (w WhileStmt) nodeStmt()      {}
 func (f FunctionDef) nodeStmt()    {}
+func (r ReturnStmt) nodeStmt()     {}
 
 //
 // Expr
@@ -141,6 +142,14 @@ func (i IfStmt) string() string {
 		s += "  " + node.string() + "\n"
 	}
 	return s + "end"
+}
+
+type ReturnStmt struct {
+	Expr Node
+}
+
+func (r ReturnStmt) string() string {
+	return "return " + r.Expr.string()
 }
 
 type WhileStmt struct {
