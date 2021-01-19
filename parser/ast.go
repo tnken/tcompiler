@@ -181,10 +181,18 @@ func (l LoopStmt) string() string {
 type FunctionDef struct {
 	Ident IdentExpr
 	Block BlockStmt
+	Args  []IdentExpr
 }
 
 func (f FunctionDef) string() string {
-	s := "def " + f.Ident.Name + "()\n"
+	s := "def " + f.Ident.Name + "("
+	for i, arg := range f.Args {
+		if i > 0 {
+			s += ", "
+		}
+		s += arg.Name
+	}
+	s += ")\n"
 	for _, b := range f.Block.Nodes {
 		s += "  " + b.string() + "\n"
 	}

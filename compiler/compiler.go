@@ -21,22 +21,25 @@ type Compiler struct {
 	constantPool []obj.Object
 	scopes       []CompilationScope
 	scopeIndex   int
-	symbolTable  *SymbolTable
 }
 
 func newCompiler(program []parser.Node) *Compiler {
-	main := CompilationScope{}
-	c := &Compiler{program, []obj.Object{}, []CompilationScope{main}, 0, NewSymbolTable()}
+	main := CompilationScope{table: NewSymbolTable()}
+	c := &Compiler{program, []obj.Object{}, []CompilationScope{main}, 0}
 	return c
 }
 
 type CompilationScope struct {
 	instructions code.Instructions
+	numLocal     int
+	table        *SymbolTable
 }
 
 func (c *Compiler) enterScope() {
+	t := NewSymbolTable()
+	t.outerScope = c.currentScope().table
 	c.scopeIndex++
-	c.scopes = append(c.scopes, CompilationScope{})
+	c.scopes = append(c.scopes, CompilationScope{numLocal: 0, table: t})
 }
 
 func (c *Compiler) leaveScope() code.Instructions {
@@ -44,6 +47,10 @@ func (c *Compiler) leaveScope() code.Instructions {
 	c.scopes = c.scopes[:len(c.scopes)-1]
 	c.scopeIndex--
 	return instructions
+}
+
+func (c *Compiler) currentScope() *CompilationScope {
+	return &c.scopes[c.scopeIndex]
 }
 
 func Exec(program []parser.Node) *Compiler {
@@ -87,23 +94,49 @@ func (c *Compiler) gen(n parser.Node) {
 			c.emit(code.OpGreater, []int{}...)
 		}
 	case parser.IdentExpr:
-		symbol, ok := c.symbolTable.Resolve(node.Name)
+		if c.scopeIndex > 0 {
+			symbol, ok := c.currentScope().table.Resolve(node.Name)
+			if ok {
+				c.emit(code.OpLoadLocal, []int{symbol.Index}...)
+				return
+			}
+			symbol, ok = c.currentScope().table.outerScope.Resolve(node.Name)
+			if ok {
+				c.emit(code.OpLoadGlobal, []int{symbol.Index}...)
+				return
+			}
+		}
+		symbol, ok := c.currentScope().table.Resolve(node.Name)
 		if ok {
 			c.emit(code.OpLoadGlobal, []int{symbol.Index}...)
 			return
 		}
-		// TODO: do error handling, when ok is false
-		fmt.Println("undefined variable")
+
+		// ひとまず握りつぶしとく
+		fmt.Println("Undefined identifier")
 		os.Exit(1)
 
 	case parser.AssignStmt:
 		c.gen(node.Expr)
-		symbol, ok := c.symbolTable.Resolve(node.Ident.Name)
+
+		// local variable
+		if c.scopeIndex > 0 {
+			symbol, ok := c.currentScope().table.Resolve(node.Ident.Name)
+			if ok {
+				c.emit(code.OpStoreLocal, []int{symbol.Index}...)
+				return
+			}
+			global := c.currentScope().table.DefineGlobal(node.Ident.Name)
+			c.emit(code.OpStoreLocal, []int{global.Index}...)
+			return
+		}
+		// global variable
+		symbol, ok := c.currentScope().table.Resolve(node.Ident.Name)
 		if ok {
 			c.emit(code.OpStoreGlobal, []int{symbol.Index}...)
 			return
 		}
-		global := c.symbolTable.Define(node.Ident.Name)
+		global := c.currentScope().table.DefineGlobal(node.Ident.Name)
 		c.emit(code.OpStoreGlobal, []int{global.Index}...)
 	case parser.IfStmt:
 		c.gen(node.Condition)
@@ -140,23 +173,16 @@ func (c *Compiler) gen(n parser.Node) {
 		objFunc := &obj.Function{Instructions: instructions}
 		c.emit(code.OpConstant, []int{c.addConstant(objFunc)}...)
 
-		symbol, ok := c.symbolTable.Resolve(node.Ident.Name)
+		symbol, ok := c.currentScope().table.Resolve(node.Ident.Name)
 		if ok {
 			c.emit(code.OpStoreGlobal, []int{symbol.Index}...)
 			return
 		}
-		global := c.symbolTable.Define(node.Ident.Name)
+		global := c.currentScope().table.DefineGlobal(node.Ident.Name)
 		c.emit(code.OpStoreGlobal, []int{global.Index}...)
 	case parser.CallExpr:
-		symbol, ok := c.symbolTable.Resolve(node.Ident.Name)
-		if ok {
-			c.emit(code.OpCall, []int{symbol.Index}...)
-			return
-		}
-		// TODO: 未定義関数呼び出しのエラーハンドル
-		// ひとまず握りつぶす
-		fmt.Println("undefined function")
-		os.Exit(1)
+		c.gen(node.Ident)
+		c.emit(code.OpCall, []int{}...)
 	case parser.ReturnStmt:
 		c.gen(node.Expr)
 		c.emit(code.OpReturn, []int{}...)

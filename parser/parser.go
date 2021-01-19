@@ -139,9 +139,30 @@ func (p *Parser) stmt() (Node, error) {
 		if err != nil {
 			return FunctionDef{}, err
 		}
-		_, err = p.consume(")")
-		if err != nil {
-			return FunctionDef{}, err
+
+		args := []IdentExpr{}
+		for {
+			if p.curToken.Kind == token.EOF {
+				return FunctionDef{}, &ParseErr{ErrSyntax, p.curToken.Loc, p}
+			}
+			f, err = p.consume(")")
+			if err != nil {
+				return FunctionDef{}, err
+			}
+			if f {
+				break
+			}
+			if len(args) > 0 {
+				f, err = p.consume(",")
+				if err != nil {
+					return FunctionDef{}, err
+				}
+			}
+			arg, ok := p.newFnIdentifier().(IdentExpr)
+			if !ok {
+				return FunctionDef{}, &ParseErr{ErrSyntax, p.curToken.Loc, p}
+			}
+			args = append(args, arg)
 		}
 
 		// block
@@ -164,7 +185,7 @@ func (p *Parser) stmt() (Node, error) {
 			}
 			block.Nodes = append(block.Nodes, n)
 		}
-		return FunctionDef{ident, block}, nil
+		return FunctionDef{ident, block, args}, nil
 	}
 
 	f, err = p.consume("if")

@@ -47,6 +47,16 @@ myFunc()`,
   return b
 end`,
 				"myFunc()"}},
+		{
+			`
+def myFunc(a)
+  return a+1
+end
+return myFunc()+1`,
+			[]string{`def myFunc(a)
+  return (a + 1)
+end`,
+				"return (myFunc() + 1)"}},
 	}
 
 	for _, c := range cases {

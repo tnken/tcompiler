@@ -33,6 +33,13 @@ const (
 )
 
 // TODO: 32bitに拡張+エラー処理
+// TODO: Bytecodeの構造体を定義してCompilerから切り離す
+type Bytecode struct {
+	constanPoolCount [2]byte
+	constantPool     []byte
+	instructionCount [2]byte
+	instractions     []byte
+}
 
 func (c *Compiler) Bytecode() string {
 	b := ""

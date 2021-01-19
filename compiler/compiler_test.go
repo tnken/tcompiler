@@ -44,7 +44,7 @@ func TestCompile(t *testing.T) {
 		{"while 1 > 0 do 1 end 1", []byte{0, 4, 0, 0, 2, 0, 1, 0, 0, 2, 0, 0, 0, 0, 2, 0, 1, 0, 0, 2, 0, 1, 0, 20, 0, 0, 1, 0, 0, 2, 9, 12, 0, 16, 0, 0, 3, 13, 0, 0, 0, 0, 4, 5}},
 		{"a = 1 while 5 > a do a=a+1 end a", []byte{0, 3, 0, 0, 2, 0, 1, 0, 0, 2, 0, 5, 0, 0, 2, 0, 1, 0, 28, 0, 0, 1, 11, 0, 0, 0, 2, 10, 0, 9, 12, 0, 25, 10, 0, 0, 0, 3, 1, 11, 0, 13, 0, 5, 10, 0, 5}},
 		{"def myFunc() 2+3 end", []byte{0, 3, 0, 0, 2, 0, 2, 0, 0, 2, 0, 3, 1, 0, 7, 0, 0, 1, 0, 0, 2, 1, 0, 6, 0, 0, 3, 11, 0, 5}},
-		{"def myFunc() return 2+3 end myFunc()", []byte{0, 3, 0, 0, 2, 0, 2, 0, 0, 2, 0, 3, 1, 0, 8, 0, 0, 1, 0, 0, 2, 1, 15, 0, 8, 0, 0, 3, 11, 0, 14, 0, 5}},
+		{"def myFunc() return 2+3 end myFunc()", []byte{0, 3, 0, 0, 2, 0, 2, 0, 0, 2, 0, 3, 1, 0, 8, 0, 0, 1, 0, 0, 2, 1, 15, 0, 9, 0, 0, 3, 11, 0, 10, 0, 14, 5}},
 	}
 
 	for _, c := range cases {
@@ -54,6 +54,40 @@ func TestCompile(t *testing.T) {
 		}
 		s := "ffffffff"
 		for _, b := range c.bytecode {
+			s += fmt.Sprintf("%02x", b)
+		}
+
+		if string(out) != s {
+			fmt.Println("expected: " + s)
+			fmt.Println("but actual: " + string(out))
+			t.Error("not match\n")
+		}
+	}
+
+	cases2 := []struct {
+		source   string
+		bytecode Bytecode
+	}{
+		{"23", Bytecode{[2]byte{0, 1}, []byte{0, 0, 2, 0, 23}, [2]byte{0, 4}, []byte{0, 0, 1, 5}}},
+		{"def myFunc() a = 1 return a end b = 3 b+myFunc()", Bytecode{[2]byte{0, 3}, []byte{0, 0, 2, 0, 1, 1, 0, 8, 0, 0, 1, 17, 0, 16, 0, 15, 0, 0, 2, 0, 3}, [2]byte{0, 17}, []byte{0, 0, 2, 11, 0, 0, 0, 3, 11, 1, 10, 1, 10, 0, 14, 1, 5}}},
+	}
+
+	for _, c := range cases2 {
+		out, err := exec.Command("go", "run", "../", c.source).Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+		s := "ffffffff"
+		for _, b := range c.bytecode.constanPoolCount {
+			s += fmt.Sprintf("%02x", b)
+		}
+		for _, b := range c.bytecode.constantPool {
+			s += fmt.Sprintf("%02x", b)
+		}
+		for _, b := range c.bytecode.instructionCount {
+			s += fmt.Sprintf("%02x", b)
+		}
+		for _, b := range c.bytecode.instractions {
 			s += fmt.Sprintf("%02x", b)
 		}
 
