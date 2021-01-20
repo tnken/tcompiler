@@ -34,7 +34,7 @@ func (st *SymbolTable) DefineGlobal(name string) Symbol {
 func (st *SymbolTable) DefineLocal(name string) Symbol {
 	symbol := Symbol{Name: name, Scope: LocalScope, Index: st.symbolCount}
 	st.store[name] = symbol
-	st.symbolCount += 1
+	st.symbolCount++
 	return symbol
 }
 

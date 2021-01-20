@@ -62,7 +62,6 @@ func (c *Compiler) Bytecode() string {
 			b += fmt.Sprintf("%02x", CONST_FUNC)
 			// u2
 			b += fmt.Sprintf("%02x", toUint16(constant.Size()))
-			// u2
 			for _, bytecode := range constant.Instructions {
 				b += fmt.Sprintf("%02x", bytecode)
 			}

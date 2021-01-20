@@ -32,6 +32,7 @@ func (i *Integer) Size() int { return 2 }
 
 type Function struct {
 	Instructions code.Instructions
+	NumArg       int
 }
 
 func (f *Function) Type() ObjectType { return FUNCTION_OBJ }

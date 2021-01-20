@@ -100,10 +100,15 @@ func (i IdentExpr) string() string {
 
 type CallExpr struct {
 	Ident IdentExpr
+	Args  []Node
 }
 
 func (c CallExpr) string() string {
-	return c.Ident.Name + "()"
+	args := ""
+	for _, arg := range c.Args {
+		args += arg.string()
+	}
+	return c.Ident.Name + "(" + args + ")"
 }
 
 //

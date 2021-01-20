@@ -448,13 +448,33 @@ func (p *Parser) atom() (Node, error) {
 	case token.Identifier:
 		// CallExpr
 		if p.peekToken.Kind == token.LParen {
-			node := CallExpr{IdentExpr{variable, p.curToken.Literal}}
+			node := CallExpr{IdentExpr{variable, p.curToken.Literal}, []Node{}}
 			p.nextToken()
 			p.nextToken()
-			f, err := p.consume(")")
-			if err != nil || !f {
-				return node, &ParseErr{ErrSyntax, p.curToken.Loc, p}
+			for {
+				if p.curToken.Kind == token.EOF {
+					return CallExpr{}, &ParseErr{ErrSyntax, p.curToken.Loc, p}
+				}
+				f, err := p.consume(")")
+				if err != nil {
+					return CallExpr{}, err
+				}
+				if f {
+					break
+				}
+				if len(node.Args) > 0 {
+					f, err = p.consume(",")
+					if err != nil || !f {
+						return FunctionDef{}, err
+					}
+				}
+				arg, err := p.expr()
+				if err != nil {
+					return CallExpr{}, &ParseErr{ErrSyntax, p.curToken.Loc, p}
+				}
+				node.Args = append(node.Args, arg)
 			}
+
 			return node, nil
 		}
 	}

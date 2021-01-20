@@ -49,14 +49,25 @@ end`,
 				"myFunc()"}},
 		{
 			`
-def myFunc(a)
+def myFunc(a, b)
   return a+1
 end
 return myFunc()+1`,
-			[]string{`def myFunc(a)
+			[]string{`def myFunc(a, b)
   return (a + 1)
 end`,
 				"return (myFunc() + 1)"}},
+		{
+			`
+def myFunc(a)
+  return myFunc(a-2) + myFunc(a-1)
+end
+myFunc(5)`,
+			[]string{`def myFunc(a)
+  return (myFunc((a - 2)) + myFunc((a - 1)))
+end`,
+				"myFunc(5)"},
+		},
 	}
 
 	for _, c := range cases {

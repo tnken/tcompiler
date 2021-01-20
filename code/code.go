@@ -53,7 +53,7 @@ var definitions = map[Opcode]*Definition{
 	OpStoreGlobal: {"OpStoreGlobal", []int{1}},
 	OpJNT:         {"OpJNT", []int{2}}, // false → OpJNTの位置+[]int{2}の分飛ぶ
 	OpJMP:         {"OpJMP", []int{2}},
-	OpCall:        {"OpCall", []int{}},
+	OpCall:        {"OpCall", []int{1}},
 	OpReturn:      {"OpReturn", []int{}},
 	OpLoadLocal:   {"OpLoadLocal", []int{1}},
 	OpStoreLocal:  {"OpStoreLocal", []int{1}},

@@ -126,8 +126,8 @@ func (c *Compiler) gen(n parser.Node) {
 				c.emit(code.OpStoreLocal, []int{symbol.Index}...)
 				return
 			}
-			global := c.currentScope().table.DefineGlobal(node.Ident.Name)
-			c.emit(code.OpStoreLocal, []int{global.Index}...)
+			local := c.currentScope().table.DefineLocal(node.Ident.Name)
+			c.emit(code.OpStoreLocal, []int{local.Index}...)
 			return
 		}
 		// global variable
@@ -165,24 +165,33 @@ func (c *Compiler) gen(n parser.Node) {
 		c.scopes[c.scopeIndex].instructions[whileHead+1] = ins[1]
 		c.scopes[c.scopeIndex].instructions[whileHead+2] = ins[2]
 	case parser.FunctionDef:
+		symbol, ok := c.currentScope().table.Resolve(node.Ident.Name)
+		if !ok {
+			symbol = c.currentScope().table.DefineGlobal(node.Ident.Name)
+		}
+
 		c.enterScope()
+		for _, arg := range node.Args {
+			c.currentScope().table.DefineLocal(arg.Name)
+		}
 		for _, stmt := range node.Block.Nodes {
 			c.gen(stmt)
 		}
 		instructions := c.leaveScope()
-		objFunc := &obj.Function{Instructions: instructions}
+		objFunc := &obj.Function{Instructions: instructions, NumArg: len(node.Args)}
 		c.emit(code.OpConstant, []int{c.addConstant(objFunc)}...)
 
-		symbol, ok := c.currentScope().table.Resolve(node.Ident.Name)
 		if ok {
 			c.emit(code.OpStoreGlobal, []int{symbol.Index}...)
 			return
 		}
-		global := c.currentScope().table.DefineGlobal(node.Ident.Name)
-		c.emit(code.OpStoreGlobal, []int{global.Index}...)
+		c.emit(code.OpStoreGlobal, []int{symbol.Index}...)
 	case parser.CallExpr:
 		c.gen(node.Ident)
-		c.emit(code.OpCall, []int{}...)
+		for _, expr := range node.Args {
+			c.gen(expr)
+		}
+		c.emit(code.OpCall, []int{len(node.Args)}...)
 	case parser.ReturnStmt:
 		c.gen(node.Expr)
 		c.emit(code.OpReturn, []int{}...)
