@@ -39,6 +39,7 @@ func (i IfStmt) nodeStmt()         {}
 func (w WhileStmt) nodeStmt()      {}
 func (f FunctionDef) nodeStmt()    {}
 func (r ReturnStmt) nodeStmt()     {}
+func (c ClassDef) nodeStmt()       {}
 
 //
 // Expr
@@ -184,9 +185,10 @@ func (l LoopStmt) string() string {
 }
 
 type FunctionDef struct {
-	Ident IdentExpr
-	Block BlockStmt
-	Args  []IdentExpr
+	Ident      IdentExpr
+	Block      BlockStmt
+	Args       []IdentExpr
+	FlagMethod bool
 }
 
 func (f FunctionDef) string() string {
@@ -202,4 +204,21 @@ func (f FunctionDef) string() string {
 		s += "  " + b.string() + "\n"
 	}
 	return s + "end"
+}
+
+type ClassDef struct {
+	Ident   IdentExpr
+	Methods []FunctionDef
+}
+
+func (c ClassDef) string() string {
+	s := "class " + c.Ident.Name + "\n"
+	for i, m := range c.Methods {
+		s += m.string()
+		if i == len(c.Methods)-1 {
+			s += "\n"
+		}
+	}
+	s += "end"
+	return s
 }

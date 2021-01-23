@@ -11,6 +11,7 @@ type ObjectType string
 const (
 	INTEGER_OBJ  = "INTEGER"
 	FUNCTION_OBJ = "FUNCTION"
+	CLASS_OBJ    = "CLASS"
 )
 
 type Object interface {
@@ -38,6 +39,17 @@ type Function struct {
 func (f *Function) Type() ObjectType { return FUNCTION_OBJ }
 func (f *Function) Inspect() string  { return fmt.Sprintf("function%p", f) }
 
-// TODO: のちほど32bitに対応する
-// ひとまず2byte(16bit)で表現
 func (f *Function) Size() int { return len(f.Instructions) }
+
+type Class struct {
+	Index          int
+	NumInstanceVal int
+	NumMethod      int
+	ConstantPool   []Object
+}
+
+func (c *Class) Type() ObjectType { return CLASS_OBJ }
+func (c *Class) Inspect() string  { return fmt.Sprintf("class%p", c) }
+
+// それぞれ1byte
+func (c *Class) Size() int { return 2 }

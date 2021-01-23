@@ -76,11 +76,43 @@ end`,
 
 		i := 0
 		for p.curToken.Kind != token.EOF {
-			stmt, _ := p.stmt()
-			fmt.Println(p.curToken.Literal)
+			stmt, _ := p.class()
 			if stmt.string() != c.expected[i] {
 				fmt.Println("expecting: \n" + c.expected[i])
 				fmt.Println("but actual: \n" + stmt.string())
+				t.Error("The ast is wrong\n")
+			}
+			i++
+		}
+	}
+
+	cases2 := []struct {
+		input    string
+		expected []string
+	}{
+		{
+			`
+class LED
+def on()
+end
+end`,
+			[]string{`class LED
+def on()
+end
+end`},
+		},
+	}
+
+	for _, c := range cases2 {
+		tokenizer := token.New(c.input)
+		p, _ := New(tokenizer)
+
+		i := 0
+		for p.curToken.Kind != token.EOF {
+			class, _ := p.class()
+			if class.string() != c.expected[i] {
+				fmt.Println("expecting: \n" + c.expected[i])
+				fmt.Println("but actual: \n" + class.string())
 				t.Error("The ast is wrong\n")
 			}
 			i++

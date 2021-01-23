@@ -113,7 +113,7 @@ func (p *Parser) consume(s string) (bool, error) {
 func (p *Parser) Program() ([]Node, error) {
 	program := []Node{}
 	for p.curToken.Kind != token.EOF {
-		n, err := p.stmt()
+		n, err := p.class()
 		if err != nil {
 			return nil, err
 		}
@@ -122,7 +122,55 @@ func (p *Parser) Program() ([]Node, error) {
 	return program, nil
 }
 
-func (p *Parser) stmt() (Node, error) {
+func (p *Parser) class() (Node, error) {
+	// parse classDef
+	f, err := p.consume("class")
+	if err != nil {
+		return ClassDef{}, err
+	}
+
+	if f {
+		ident, ok := p.newFnIdentifier().(IdentExpr)
+		if !ok {
+			return ClassDef{}, &ParseErr{ErrSyntax, p.curToken.Loc, p}
+		}
+
+		methods := []FunctionDef{}
+		for {
+			f, err = p.consume("end")
+			if err != nil {
+				return ClassDef{}, err
+			}
+			if f {
+				break
+			}
+			if p.curToken.Kind == token.EOF {
+				return ClassDef{}, &ParseErr{ErrSyntax, p.curToken.Loc, p}
+			}
+
+			node, err := p.function()
+			if err != nil {
+				return FunctionDef{}, err
+			}
+			method, ok := node.(FunctionDef)
+			if !ok {
+				return nil, ErrSyntax
+			}
+			method.FlagMethod = true
+			methods = append(methods, method)
+		}
+
+		return ClassDef{ident, methods}, nil
+	}
+
+	node, err := p.function()
+	if err != nil {
+		return ClassDef{}, err
+	}
+	return node, nil
+}
+
+func (p *Parser) function() (Node, error) {
 	// parse functionDef
 	f, err := p.consume("def")
 	if err != nil {
@@ -185,10 +233,17 @@ func (p *Parser) stmt() (Node, error) {
 			}
 			block.Nodes = append(block.Nodes, n)
 		}
-		return FunctionDef{ident, block, args}, nil
+		return FunctionDef{ident, block, args, false}, nil
 	}
+	node, err := p.stmt()
+	if err != nil {
+		return FunctionDef{}, err
+	}
+	return node, nil
+}
 
-	f, err = p.consume("if")
+func (p *Parser) stmt() (Node, error) {
+	f, err := p.consume("if")
 	if err != nil {
 		return IfStmt{}, err
 	}

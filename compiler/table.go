@@ -42,3 +42,30 @@ func (st *SymbolTable) Resolve(name string) (Symbol, bool) {
 	sym, ok := st.store[name]
 	return sym, ok
 }
+
+type Class struct {
+	Name  string
+	Index int
+}
+
+type ClassTable struct {
+	store      map[string]Class
+	classCount int
+}
+
+func NewClassTable() *ClassTable {
+	c := make(map[string]Class)
+	return &ClassTable{store: c, classCount: 0}
+}
+
+func (ct *ClassTable) DefineClass(name string) Class {
+	class := Class{Name: name, Index: ct.classCount}
+	ct.store[name] = class
+	ct.classCount++
+	return class
+}
+
+func (ct *ClassTable) Resolve(name string) (Class, bool) {
+	class, ok := ct.store[name]
+	return class, ok
+}

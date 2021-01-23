@@ -224,6 +224,7 @@ const (
 	KeyWhile                // 24:
 	KeyDef                  // 25:
 	KeyReturn               // 26:
+	KeyClass                // 27:
 )
 
 var reserved = []string{
@@ -235,6 +236,7 @@ var reserved = []string{
 	"while",
 	"def",
 	"return",
+	"class",
 }
 
 var reservedToKind = map[string]Kind{
@@ -246,6 +248,7 @@ var reservedToKind = map[string]Kind{
 	"while":  KeyWhile,
 	"def":    KeyDef,
 	"return": KeyReturn,
+	"class":  KeyClass,
 }
 
 func (t Tokenizer) isReserved() bool {

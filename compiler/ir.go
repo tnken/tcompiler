@@ -12,10 +12,17 @@ import (
 
 // struct {
 // 	u4 magic
+//	u1 class_pool_count
+//	c  class_pool[class_pool_count]
 // 	u2 constant_pool_count
 // 	cp constant_pool[constant_pool_count]
 // 	u2 instruction_count
 // 	ins instructions[instruction_count]
+// }
+
+// struct class pool {
+// u2 constant_pool_count
+// cp constant_pool[constant_pool_count]
 // }
 
 // struct constant_pool {
@@ -45,28 +52,19 @@ func (c *Compiler) Bytecode() string {
 	b := ""
 	// u4 magic（特に意味無し）
 	b += fmt.Sprintf("%02x", []byte{255, 255, 255, 255})
+
+	// u1 class pool count
+	b += fmt.Sprintf("%02x", len(c.classPool))
+	// class pool[class pool count]
+	for _, class := range c.classPool {
+		// u2
+		b += fmt.Sprintf("%02x", toUint16(len(class.ConstantPool)))
+		b += writeConstant(class.ConstantPool)
+	}
 	// u2 constant_pool_count
 	b += fmt.Sprintf("%02x", toUint16(len(c.constantPool)))
 	// const pool
-	for _, constant := range c.constantPool {
-		switch constant := constant.(type) {
-		case *obj.Integer:
-			// u1
-			b += fmt.Sprintf("%02x", CONST_INT)
-			// u2
-			b += fmt.Sprintf("%02x", toUint16(constant.Size()))
-			// u2
-			b += fmt.Sprintf("%02x", toUint16(constant.Value))
-		case *obj.Function:
-			// u1
-			b += fmt.Sprintf("%02x", CONST_FUNC)
-			// u2
-			b += fmt.Sprintf("%02x", toUint16(constant.Size()))
-			for _, bytecode := range constant.Instructions {
-				b += fmt.Sprintf("%02x", bytecode)
-			}
-		}
-	}
+	b += writeConstant(c.constantPool)
 	// u2 instruction_count
 	b += fmt.Sprintf("%02x", toUint16(len(c.scopes[c.scopeIndex].instructions)))
 
@@ -104,5 +102,29 @@ func (c *Compiler) Dump() {
 func toUint16(num int) [2]byte {
 	b := [2]byte{}
 	binary.BigEndian.PutUint16(b[0:], uint16(num))
+	return b
+}
+
+func writeConstant(cPool []obj.Object) string {
+	b := ""
+	for _, constant := range cPool {
+		switch constant := constant.(type) {
+		case *obj.Integer:
+			// u1
+			b += fmt.Sprintf("%02x", CONST_INT)
+			// u2
+			b += fmt.Sprintf("%02x", toUint16(constant.Size()))
+			// u2
+			b += fmt.Sprintf("%02x", toUint16(constant.Value))
+		case *obj.Function:
+			// u1
+			b += fmt.Sprintf("%02x", CONST_FUNC)
+			// u2
+			b += fmt.Sprintf("%02x", toUint16(constant.Size()))
+			for _, bytecode := range constant.Instructions {
+				b += fmt.Sprintf("%02x", bytecode)
+			}
+		}
+	}
 	return b
 }

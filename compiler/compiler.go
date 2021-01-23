@@ -17,15 +17,18 @@ func (c *Compiler) emit(op code.Opcode, operands ...int) {
 }
 
 type Compiler struct {
-	p            []parser.Node
-	constantPool []obj.Object
-	scopes       []CompilationScope
-	scopeIndex   int
+	p              []parser.Node
+	constantPool   []obj.Object
+	scopes         []CompilationScope
+	scopeIndex     int
+	cTable         *ClassTable
+	classPool      []obj.Class
+	FlagClassScope bool
 }
 
 func newCompiler(program []parser.Node) *Compiler {
 	main := CompilationScope{table: NewSymbolTable()}
-	c := &Compiler{program, []obj.Object{}, []CompilationScope{main}, 0}
+	c := &Compiler{program, []obj.Object{}, []CompilationScope{main}, 0, NewClassTable(), []obj.Class{}, false}
 	return c
 }
 
@@ -33,6 +36,15 @@ type CompilationScope struct {
 	instructions code.Instructions
 	numLocal     int
 	table        *SymbolTable
+}
+
+func (c *Compiler) enterClass() {
+	c.FlagClassScope = true
+}
+
+func (c *Compiler) leaveClass() obj.Class {
+	c.FlagClassScope = false
+	return c.classPool[len(c.classPool)-1]
 }
 
 func (c *Compiler) enterScope() {
@@ -63,6 +75,10 @@ func Exec(program []parser.Node) *Compiler {
 }
 
 func (c *Compiler) addConstant(obj obj.Object) int {
+	if c.FlagClassScope {
+		c.classPool[len(c.classPool)-1].ConstantPool = append(c.classPool[len(c.classPool)-1].ConstantPool, obj)
+		return len(c.constantPool)
+	}
 	c.constantPool = append(c.constantPool, obj)
 	return len(c.constantPool)
 }
@@ -165,6 +181,19 @@ func (c *Compiler) gen(n parser.Node) {
 		c.scopes[c.scopeIndex].instructions[whileHead+1] = ins[1]
 		c.scopes[c.scopeIndex].instructions[whileHead+2] = ins[2]
 	case parser.FunctionDef:
+		if c.FlagClassScope {
+			c.enterScope()
+			for _, arg := range node.Args {
+				c.currentScope().table.DefineLocal(arg.Name)
+			}
+			for _, stmt := range node.Block.Nodes {
+				c.gen(stmt)
+			}
+			instructions := c.leaveScope()
+			objFunc := &obj.Function{Instructions: instructions, NumArg: len(node.Args)}
+			c.classPool[len(c.classPool)-1].ConstantPool = append(c.classPool[len(c.classPool)-1].ConstantPool, objFunc)
+			return
+		}
 		symbol, ok := c.currentScope().table.Resolve(node.Ident.Name)
 		if !ok {
 			symbol = c.currentScope().table.DefineGlobal(node.Ident.Name)
@@ -195,5 +224,13 @@ func (c *Compiler) gen(n parser.Node) {
 	case parser.ReturnStmt:
 		c.gen(node.Expr)
 		c.emit(code.OpReturn, []int{}...)
+	case parser.ClassDef:
+		ct := c.cTable.DefineClass(node.Ident.Name)
+		c.classPool = append(c.classPool, obj.Class{Index: ct.Index, NumInstanceVal: 0, NumMethod: 0, ConstantPool: []obj.Object{}})
+		c.enterClass()
+		for _, method := range node.Methods {
+			c.gen(method)
+		}
+		c.leaveClass()
 	}
 }
