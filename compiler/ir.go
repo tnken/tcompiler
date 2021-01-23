@@ -7,7 +7,7 @@ import (
 	"github.com/takeru56/tcompiler/obj"
 )
 
-// output tarto IR bytecode Format
+// Output tarto IR bytecode Format
 // ***************************************
 
 // struct {
@@ -15,20 +15,20 @@ import (
 //	u1 class_pool_count
 //	c  class_pool[class_pool_count]
 // 	u2 constant_pool_count
-// 	cp constant_pool[constant_pool_count]
+// 	constant_pool[constant_pool_count]
 // 	u2 instruction_count
-// 	ins instructions[instruction_count]
+// 	byte[instruction_count]
 // }
 
 // struct class pool {
-// u2 constant_pool_count
-// cp constant_pool[constant_pool_count]
+// 	u2 constant_pool_count
+// 	constant_pool[constant_pool_count]
 // }
 
 // struct constant_pool {
 // 	u1 constant type
 // 	u2 constant size
-// 	c [const size]constants
+// 	byte[constant size]
 // }
 // ***************************************
 type ConstantType byte

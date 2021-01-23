@@ -53,6 +53,7 @@ func TestCompile(t *testing.T) {
 			log.Fatal(err)
 		}
 		s := "ffffffff"
+		s += "00" // class pool count
 		for _, b := range c.bytecode {
 			s += fmt.Sprintf("%02x", b)
 		}
@@ -69,10 +70,10 @@ func TestCompile(t *testing.T) {
 		bytecode Bytecode
 	}{
 		{"23", Bytecode{[2]byte{0, 1}, []byte{0, 0, 2, 0, 23}, [2]byte{0, 4}, []byte{0, 0, 1, 5}}},
-		// {"def myFunc() a = 1 return a end b = 3 b+myFunc()", Bytecode{[2]byte{0, 3}, []byte{0, 0, 2, 0, 1, 1, 0, 8, 0, 0, 1, 17, 0, 16, 0, 15, 0, 0, 2, 0, 3}, [2]byte{0, 18}, []byte{0, 0, 2, 11, 0, 0, 0, 3, 11, 1, 10, 1, 10, 0, 14, 0, 1, 5}}},
-		{`23
-class LED
-end`, Bytecode{[2]byte{0, 1}, []byte{0, 0, 2, 0, 23}, [2]byte{0, 4}, []byte{0, 0, 1, 5}}},
+		{"def myFunc() a = 1 return a end b = 3 b+myFunc()", Bytecode{[2]byte{0, 3}, []byte{0, 0, 2, 0, 1, 1, 0, 8, 0, 0, 1, 17, 0, 16, 0, 15, 0, 0, 2, 0, 3}, [2]byte{0, 18}, []byte{0, 0, 2, 11, 0, 0, 0, 3, 11, 1, 10, 1, 10, 0, 14, 0, 1, 5}}},
+		// 		{`23
+		// class LED
+		// end`, Bytecode{[2]byte{0, 1}, []byte{0, 0, 2, 0, 23}, [2]byte{0, 4}, []byte{0, 0, 1, 5}}},
 	}
 
 	for _, c := range cases2 {
@@ -81,6 +82,7 @@ end`, Bytecode{[2]byte{0, 1}, []byte{0, 0, 2, 0, 23}, [2]byte{0, 4}, []byte{0, 0
 			log.Fatal(err)
 		}
 		s := "ffffffff"
+		s += "00" // class pool count
 		for _, b := range c.bytecode.constanPoolCount {
 			s += fmt.Sprintf("%02x", b)
 		}

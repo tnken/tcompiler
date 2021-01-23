@@ -232,5 +232,12 @@ func (c *Compiler) gen(n parser.Node) {
 			c.gen(method)
 		}
 		c.leaveClass()
+	case parser.InstantiationExpr:
+		// c.gen(node.Ident)
+		class, _ := c.cTable.Resolve(node.Ident.Name)
+		// for _, expr := range node.Args {
+		// 	c.gen(expr)
+		// }
+		c.emit(code.OpInstance, []int{class.Index}...)
 	}
 }

@@ -95,11 +95,13 @@ end`,
 class LED
 def on()
 end
-end`,
+end
+
+LED()`,
 			[]string{`class LED
 def on()
 end
-end`},
+end`, "LED()"},
 		},
 	}
 

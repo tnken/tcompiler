@@ -28,18 +28,19 @@ type Stmt interface {
 }
 
 // For Debugging
-func (i InfixExpr) nodeExpr()      {}
-func (i IntegerLiteral) nodeExpr() {}
-func (i IdentExpr) nodeExpr()      {}
-func (c CallExpr) nodeExpr()       {}
-func (l LoopStmt) nodeStmt()       {}
-func (a AssignStmt) nodeStmt()     {}
-func (b BlockStmt) nodeStmt()      {}
-func (i IfStmt) nodeStmt()         {}
-func (w WhileStmt) nodeStmt()      {}
-func (f FunctionDef) nodeStmt()    {}
-func (r ReturnStmt) nodeStmt()     {}
-func (c ClassDef) nodeStmt()       {}
+func (i InfixExpr) nodeExpr()         {}
+func (i IntegerLiteral) nodeExpr()    {}
+func (i IdentExpr) nodeExpr()         {}
+func (c CallExpr) nodeExpr()          {}
+func (i InstantiationExpr) nodeExpr() {}
+func (l LoopStmt) nodeStmt()          {}
+func (a AssignStmt) nodeStmt()        {}
+func (b BlockStmt) nodeStmt()         {}
+func (i IfStmt) nodeStmt()            {}
+func (w WhileStmt) nodeStmt()         {}
+func (f FunctionDef) nodeStmt()       {}
+func (r ReturnStmt) nodeStmt()        {}
+func (c ClassDef) nodeStmt()          {}
 
 //
 // Expr
@@ -110,6 +111,19 @@ func (c CallExpr) string() string {
 		args += arg.string()
 	}
 	return c.Ident.Name + "(" + args + ")"
+}
+
+type InstantiationExpr struct {
+	Ident IdentExpr
+	Args  []Node
+}
+
+func (i InstantiationExpr) string() string {
+	args := ""
+	for _, arg := range i.Args {
+		args += arg.string()
+	}
+	return i.Ident.Name + "(" + args + ")"
 }
 
 //
