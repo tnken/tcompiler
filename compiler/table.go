@@ -69,3 +69,28 @@ func (ct *ClassTable) Resolve(name string) (Class, bool) {
 	class, ok := ct.store[name]
 	return class, ok
 }
+
+type MethodTable struct {
+	store       map[string]int
+	methodCount int
+}
+
+func NewMethodTable() *MethodTable {
+	m := make(map[string]int)
+	return &MethodTable{store: m, methodCount: 0}
+}
+
+func (mt *MethodTable) DefineMethodId(name string) int {
+	_, ok := mt.store[name]
+	if ok {
+		return mt.store[name]
+	}
+	mt.store[name] = mt.methodCount
+	mt.methodCount++
+	return mt.store[name]
+}
+
+func (mt *MethodTable) ResolveMethodId(name string) (int, bool) {
+	id, ok := mt.store[name]
+	return id, ok
+}

@@ -32,6 +32,7 @@ func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
 func (i *Integer) Size() int { return 2 }
 
 type Function struct {
+	Id           int
 	Instructions code.Instructions
 	NumArg       int
 }

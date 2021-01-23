@@ -24,11 +24,12 @@ type Compiler struct {
 	cTable         *ClassTable
 	classPool      []obj.Class
 	FlagClassScope bool
+	mTable         *MethodTable
 }
 
 func newCompiler(program []parser.Node) *Compiler {
 	main := CompilationScope{table: NewSymbolTable()}
-	c := &Compiler{program, []obj.Object{}, []CompilationScope{main}, 0, NewClassTable(), []obj.Class{}, false}
+	c := &Compiler{program, []obj.Object{}, []CompilationScope{main}, 0, NewClassTable(), []obj.Class{}, false, NewMethodTable()}
 	return c
 }
 
@@ -77,7 +78,7 @@ func Exec(program []parser.Node) *Compiler {
 func (c *Compiler) addConstant(obj obj.Object) int {
 	if c.FlagClassScope {
 		c.classPool[len(c.classPool)-1].ConstantPool = append(c.classPool[len(c.classPool)-1].ConstantPool, obj)
-		return len(c.constantPool)
+		return len(c.classPool[len(c.classPool)-1].ConstantPool)
 	}
 	c.constantPool = append(c.constantPool, obj)
 	return len(c.constantPool)
@@ -181,6 +182,7 @@ func (c *Compiler) gen(n parser.Node) {
 		c.scopes[c.scopeIndex].instructions[whileHead+1] = ins[1]
 		c.scopes[c.scopeIndex].instructions[whileHead+2] = ins[2]
 	case parser.FunctionDef:
+		id := c.mTable.DefineMethodId(node.Ident.Name)
 		if c.FlagClassScope {
 			c.enterScope()
 			for _, arg := range node.Args {
@@ -190,7 +192,7 @@ func (c *Compiler) gen(n parser.Node) {
 				c.gen(stmt)
 			}
 			instructions := c.leaveScope()
-			objFunc := &obj.Function{Instructions: instructions, NumArg: len(node.Args)}
+			objFunc := &obj.Function{Id: id, Instructions: instructions, NumArg: len(node.Args)}
 			c.classPool[len(c.classPool)-1].ConstantPool = append(c.classPool[len(c.classPool)-1].ConstantPool, objFunc)
 			return
 		}
@@ -207,7 +209,7 @@ func (c *Compiler) gen(n parser.Node) {
 			c.gen(stmt)
 		}
 		instructions := c.leaveScope()
-		objFunc := &obj.Function{Instructions: instructions, NumArg: len(node.Args)}
+		objFunc := &obj.Function{Id: id, Instructions: instructions, NumArg: len(node.Args)}
 		c.emit(code.OpConstant, []int{c.addConstant(objFunc)}...)
 
 		if ok {
@@ -239,5 +241,15 @@ func (c *Compiler) gen(n parser.Node) {
 		// 	c.gen(expr)
 		// }
 		c.emit(code.OpInstance, []int{class.Index}...)
+	case parser.CallMethodExpr:
+		c.gen(node.Receiver)
+		call, ok := node.Method.(parser.CallExpr)
+		if !ok {
+			fmt.Println("method error")
+			os.Exit(1)
+		}
+		id, _ := c.mTable.ResolveMethodId(call.Ident.Name)
+		c.emit(code.OpLoadMethod, []int{id}...)
+		c.emit(code.OpCallMethod, []int{len(call.Args)}...)
 	}
 }

@@ -501,6 +501,7 @@ func (p *Parser) atom() (Node, error) {
 	case token.Num:
 		return p.newIntegerLiteral(), nil
 	case token.Identifier:
+		var n Node
 		// CallExpr
 		if p.peekToken.Kind == token.LParen {
 			literal := p.curToken.Literal
@@ -531,12 +532,31 @@ func (p *Parser) atom() (Node, error) {
 				args = append(args, arg)
 			}
 
-			if 'A' <= literal[0] && literal[0] <= 'Z' {
-				return InstantiationExpr{IdentExpr{variable, literal}, args}, nil
+			if p.curToken.Kind != token.Dot {
+				if 'A' <= literal[0] && literal[0] <= 'Z' {
+					n = InstantiationExpr{IdentExpr{variable, literal}, args}
+					return n, nil
+				}
+				n = CallExpr{IdentExpr{variable, literal}, args}
+				return n, nil
 			}
-
-			return CallExpr{IdentExpr{variable, literal}, args}, nil
+		} else {
+			n = p.newValIdentifier()
 		}
+
+		// call method
+		f, err := p.consume(".")
+		if err != nil {
+			return CallExpr{}, err
+		}
+		if f {
+			node, err := p.atom()
+			if err != nil {
+				return CallMethodExpr{}, err
+			}
+			return CallMethodExpr{n, node}, err
+		}
+		return n, nil
 	}
 	return p.newValIdentifier(), nil
 }

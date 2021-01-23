@@ -31,6 +31,8 @@ const (
 	OpLoadLocal                 // 16
 	OpStoreLocal                // 17
 	OpInstance                  // 18
+	OpLoadMethod                // 19
+	OpCallMethod                // 19
 )
 
 // Definition consits of Name and OperandWidths property
@@ -59,6 +61,8 @@ var definitions = map[Opcode]*Definition{
 	OpLoadLocal:   {"OpLoadLocal", []int{1}},
 	OpStoreLocal:  {"OpStoreLocal", []int{1}},
 	OpInstance:    {"OpInstance", []int{1}},
+	OpLoadMethod:  {"OpLoadMethod", []int{1}},
+	OpCallMethod:  {"OpCallMethod", []int{1}},
 }
 
 // Lookup finds Definition of Opcode

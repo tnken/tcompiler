@@ -33,6 +33,7 @@ func (i IntegerLiteral) nodeExpr()    {}
 func (i IdentExpr) nodeExpr()         {}
 func (c CallExpr) nodeExpr()          {}
 func (i InstantiationExpr) nodeExpr() {}
+func (c CallMethodExpr) nodeExpr()    {}
 func (l LoopStmt) nodeStmt()          {}
 func (a AssignStmt) nodeStmt()        {}
 func (b BlockStmt) nodeStmt()         {}
@@ -126,6 +127,15 @@ func (i InstantiationExpr) string() string {
 	return i.Ident.Name + "(" + args + ")"
 }
 
+type CallMethodExpr struct {
+	Receiver Node
+	Method   Node
+}
+
+func (c CallMethodExpr) string() string {
+	return c.Receiver.string() + "." + c.Method.string()
+}
+
 //
 // Stmt
 //
@@ -217,7 +227,7 @@ func (f FunctionDef) string() string {
 	for _, b := range f.Block.Nodes {
 		s += "  " + b.string() + "\n"
 	}
-	return s + "end"
+	return s + "end\n"
 }
 
 type ClassDef struct {
@@ -227,11 +237,8 @@ type ClassDef struct {
 
 func (c ClassDef) string() string {
 	s := "class " + c.Ident.Name + "\n"
-	for i, m := range c.Methods {
+	for _, m := range c.Methods {
 		s += m.string()
-		if i == len(c.Methods)-1 {
-			s += "\n"
-		}
 	}
 	s += "end"
 	return s

@@ -172,14 +172,34 @@ func TestTokenizer(t *testing.T) {
 
 	input4 := `
 class LED
-end`
+	def on()
+	end
+end
+
+a = LED()
+a.on()`
 	case4 := []struct {
 		expectKind    Kind
 		expectLiteral string
 	}{
 		{KeyClass, "class"},
 		{Identifier, "LED"},
+		{KeyDef, "def"},
+		{Identifier, "on"},
+		{LParen, "("},
+		{RParen, ")"},
 		{KeyEnd, "end"},
+		{KeyEnd, "end"},
+		{Identifier, "a"},
+		{Assign, "="},
+		{Identifier, "LED"},
+		{LParen, "("},
+		{RParen, ")"},
+		{Identifier, "a"},
+		{Dot, "."},
+		{Identifier, "on"},
+		{LParen, "("},
+		{RParen, ")"},
 		{EOF, ""},
 	}
 	tokenizer = New(input4)

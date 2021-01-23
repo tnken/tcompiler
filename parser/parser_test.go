@@ -45,7 +45,8 @@ myFunc()`,
   b = (1 + 1)
   (b + 2)
   return b
-end`,
+end
+`,
 				"myFunc()"}},
 		{
 			`
@@ -55,7 +56,8 @@ end
 return myFunc()+1`,
 			[]string{`def myFunc(a, b)
   return (a + 1)
-end`,
+end
+`,
 				"return (myFunc() + 1)"}},
 		{
 			`
@@ -65,7 +67,8 @@ end
 myFunc(5)`,
 			[]string{`def myFunc(a)
   return (myFunc((a - 2)) + myFunc((a - 1)))
-end`,
+end
+`,
 				"myFunc(5)"},
 		},
 	}
@@ -95,13 +98,24 @@ end`,
 class LED
 def on()
 end
+def off()
 end
-
-LED()`,
+end
+a = LED()
+b = LED()
+a.on()
+b.off()`,
 			[]string{`class LED
 def on()
 end
-end`, "LED()"},
+def off()
+end
+end`,
+				"a = LED()",
+				"b = LED()",
+				"a.on()",
+				"b.off()",
+			},
 		},
 	}
 

@@ -119,6 +119,8 @@ func writeConstant(cPool []obj.Object) string {
 		case *obj.Function:
 			// u1
 			b += fmt.Sprintf("%02x", CONST_FUNC)
+			// u1
+			b += fmt.Sprintf("%02x", constant.Id)
 			// u2
 			b += fmt.Sprintf("%02x", toUint16(constant.Size()))
 			for _, bytecode := range constant.Instructions {
