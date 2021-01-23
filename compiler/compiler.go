@@ -250,6 +250,14 @@ func (c *Compiler) gen(n parser.Node) {
 		}
 		id, _ := c.mTable.ResolveMethodId(call.Ident.Name)
 		c.emit(code.OpLoadMethod, []int{id}...)
+		expr, ok := node.Method.(parser.CallExpr)
+		if !ok {
+			fmt.Println("method error")
+			os.Exit(1)
+		}
+		for _, expr := range expr.Args {
+			c.gen(expr)
+		}
 		c.emit(code.OpCallMethod, []int{len(call.Args)}...)
 	}
 }

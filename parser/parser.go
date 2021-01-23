@@ -110,6 +110,9 @@ func (p *Parser) consume(s string) (bool, error) {
 	return false, nil
 }
 
+// 以下LL(1)parser
+// TODO: BNFで可視化
+
 func (p *Parser) Program() ([]Node, error) {
 	program := []Node{}
 	for p.curToken.Kind != token.EOF {
