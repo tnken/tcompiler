@@ -27,14 +27,15 @@ const (
 	OpJNT                            // 12
 	OpJMP                            // 13
 	OpCall                           // 14
-	OpReturn                         // 15
+	OpReturnValue                    // 15
 	OpLoadLocal                      // 16
 	OpStoreLocal                     // 17
 	OpInstance                       // 18
 	OpLoadMethod                     // 19
-	OpCallMethod                     // 19
-	OpLoadInstanceVal                // 20
-	OpStoreInstanceVal               // 21
+	OpCallMethod                     // 20
+	OpLoadInstanceVal                // 21
+	OpStoreInstanceVal               // 22
+	OpReturn                         // 23
 )
 
 // Definition consits of Name and OperandWidths property
@@ -60,6 +61,7 @@ var definitions = map[Opcode]*Definition{
 	OpJMP:              {"OpJMP", []int{2}},
 	OpCall:             {"OpCall", []int{1}},
 	OpReturn:           {"OpReturn", []int{}},
+	OpReturnValue:      {"OpReturnValue", []int{}},
 	OpLoadLocal:        {"OpLoadLocal", []int{1}},
 	OpStoreLocal:       {"OpStoreLocal", []int{1}},
 	OpInstance:         {"OpInstance", []int{1}},

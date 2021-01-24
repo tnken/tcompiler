@@ -48,33 +48,34 @@ type Class struct {
 	Index            int
 	instanceValTable map[string]int
 	instanceValCount int
+	hasInit          bool
 }
 
-func NewClass(name string, index int) Class {
+func NewClass(name string, index int, hasInit bool) *Class {
 	t := make(map[string]int)
-	return Class{Name: name, Index: index, instanceValTable: t, instanceValCount: 0}
+	return &Class{Name: name, Index: index, instanceValTable: t, instanceValCount: 0, hasInit: hasInit}
 }
 
 type ClassTable struct {
-	store      map[string]Class
+	store      map[string]*Class
 	classCount int
 }
 
 func NewClassTable() *ClassTable {
-	c := make(map[string]Class)
+	c := make(map[string]*Class)
 	return &ClassTable{store: c, classCount: 0}
 }
 
 func (ct *ClassTable) DefineClass(name string) Class {
-	class := NewClass(name, ct.classCount)
+	class := NewClass(name, ct.classCount, false)
 	ct.store[name] = class
 	ct.classCount++
-	return class
+	return *class
 }
 
 func (ct *ClassTable) Resolve(name string) (*Class, bool) {
 	class, ok := ct.store[name]
-	return &class, ok
+	return class, ok
 }
 
 func (c *Class) DefineInstanceVal(name string) int {
@@ -95,7 +96,9 @@ type MethodTable struct {
 
 func NewMethodTable() *MethodTable {
 	m := make(map[string]int)
-	return &MethodTable{store: m, methodCount: 0}
+	// for constructor
+	m["init"] = 0
+	return &MethodTable{store: m, methodCount: 1}
 }
 
 func (mt *MethodTable) DefineMethodId(name string) int {

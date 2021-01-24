@@ -201,6 +201,11 @@ func (c *Compiler) gen(n parser.Node) {
 	case parser.FunctionDef:
 		id := c.mTable.DefineMethodId(node.Ident.Name)
 		if c.FlagClassScope {
+			class := c.currentClass()
+			if id == 0 {
+				cc, _ := c.cTable.Resolve(class.Name)
+				cc.hasInit = true
+			}
 			c.enterScope()
 			for _, arg := range node.Args {
 				c.currentScope().table.DefineLocal(arg.Name)
@@ -208,9 +213,10 @@ func (c *Compiler) gen(n parser.Node) {
 			for _, stmt := range node.Block.Nodes {
 				c.gen(stmt)
 			}
+			c.emit(code.OpReturn, []int{}...)
 			instructions := c.leaveScope()
 			objFunc := &obj.Function{Id: id, Instructions: instructions, NumArg: len(node.Args)}
-			c.classPool[len(c.classPool)-1].ConstantPool = append(c.classPool[len(c.classPool)-1].ConstantPool, objFunc)
+			class.ConstantPool = append(c.classPool[len(c.classPool)-1].ConstantPool, objFunc)
 			return
 		}
 		symbol, ok := c.currentScope().table.Resolve(node.Ident.Name)
@@ -225,6 +231,7 @@ func (c *Compiler) gen(n parser.Node) {
 		for _, stmt := range node.Block.Nodes {
 			c.gen(stmt)
 		}
+		c.emit(code.OpReturn, []int{}...)
 		instructions := c.leaveScope()
 		objFunc := &obj.Function{Id: id, Instructions: instructions, NumArg: len(node.Args)}
 		c.emit(code.OpConstant, []int{c.addConstant(objFunc)}...)
@@ -242,7 +249,7 @@ func (c *Compiler) gen(n parser.Node) {
 		c.emit(code.OpCall, []int{len(node.Args)}...)
 	case parser.ReturnStmt:
 		c.gen(node.Expr)
-		c.emit(code.OpReturn, []int{}...)
+		c.emit(code.OpReturnValue, []int{}...)
 	case parser.ClassDef:
 		ct := c.cTable.DefineClass(node.Ident.Name)
 		c.classPool = append(c.classPool, obj.Class{Name: node.Ident.Name, Index: ct.Index, NumInstanceVal: 0, NumMethod: 0, ConstantPool: []obj.Object{}})
@@ -254,10 +261,15 @@ func (c *Compiler) gen(n parser.Node) {
 	case parser.InstantiationExpr:
 		// c.gen(node.Ident)
 		class, _ := c.cTable.Resolve(node.Ident.Name)
-		// for _, expr := range node.Args {
-		// 	c.gen(expr)
-		// }
 		c.emit(code.OpInstance, []int{class.Index}...)
+		// call init\
+		if class.hasInit {
+			c.emit(code.OpLoadMethod, []int{0}...)
+			for _, expr := range node.Args {
+				c.gen(expr)
+			}
+			c.emit(code.OpCallMethod, []int{len(node.Args)}...)
+		}
 	case parser.CallMethodExpr:
 		c.gen(node.Receiver)
 		call, ok := node.Method.(parser.CallExpr)
@@ -267,12 +279,7 @@ func (c *Compiler) gen(n parser.Node) {
 		}
 		id, _ := c.mTable.ResolveMethodId(call.Ident.Name)
 		c.emit(code.OpLoadMethod, []int{id}...)
-		expr, ok := node.Method.(parser.CallExpr)
-		if !ok {
-			fmt.Println("method error")
-			os.Exit(1)
-		}
-		for _, expr := range expr.Args {
+		for _, expr := range call.Args {
 			c.gen(expr)
 		}
 		c.emit(code.OpCallMethod, []int{len(call.Args)}...)
