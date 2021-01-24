@@ -151,8 +151,6 @@ func (t *Tokenizer) Next() (Token, error) {
 		return t.newToken(EOF, ""), nil
 	}
 	ch = t.Input[t.Pos]
-	fmt.Println("ddddddddddd")
-	fmt.Println(string(ch))
 
 	switch {
 	case ch == '+':
