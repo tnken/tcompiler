@@ -1,6 +1,7 @@
 package token
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -173,12 +174,14 @@ func TestTokenizer(t *testing.T) {
 	input4 := `
 class LED
 	def on(num)
+		# this is comment
 		self.pin = num
 	end
 end
 
+# this is also comment
 a = LED()
-a.on(3)`
+a.on(3) # call on method`
 	case4 := []struct {
 		expectKind    Kind
 		expectLiteral string
@@ -215,9 +218,12 @@ a.on(3)`
 		token, _ := tokenizer.Next()
 		if token.Kind != c.expectKind {
 			t.Error("The token kind is wrong\n")
+			fmt.Println(token.Kind)
 		}
 
 		if token.Literal != c.expectLiteral {
+			fmt.Println("expected: " + c.expectLiteral)
+			fmt.Println("but actual: " + token.Literal)
 			t.Error("The token literal is wrong\n")
 		}
 	}

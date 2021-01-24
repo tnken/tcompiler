@@ -115,6 +115,10 @@ func (t *Tokenizer) lexSpaces() {
 	t.recognizeMany(func(b byte) bool { return (strings.IndexByte(" \n\t", b) > -1) })
 }
 
+func (t *Tokenizer) skipLine() {
+	t.recognizeMany(func(b byte) bool { return (b != '\n') })
+}
+
 // Next returns a Token and move forward current position
 func (t *Tokenizer) Next() (Token, error) {
 	// TODO: Refactoring from LL:51 to LL:62
@@ -126,11 +130,29 @@ func (t *Tokenizer) Next() (Token, error) {
 	if ch == ' ' || ch == '\t' || ch == '\n' {
 		t.lexSpaces()
 	}
+	if t.Pos >= len(t.Input) {
+		return t.newToken(EOF, ""), nil
+	}
+	ch = t.Input[t.Pos]
+
+	if ch == '#' {
+		t.skipLine()
+	}
 
 	if t.Pos >= len(t.Input) {
 		return t.newToken(EOF, ""), nil
 	}
 	ch = t.Input[t.Pos]
+
+	if ch == ' ' || ch == '\t' || ch == '\n' {
+		t.lexSpaces()
+	}
+	if t.Pos >= len(t.Input) {
+		return t.newToken(EOF, ""), nil
+	}
+	ch = t.Input[t.Pos]
+	fmt.Println("ddddddddddd")
+	fmt.Println(string(ch))
 
 	switch {
 	case ch == '+':
@@ -229,6 +251,7 @@ const (
 	KeyClass                // 27:
 	Dot                     // 28: .
 	KeySelf                 // 29:
+	Number                  // 30: #
 )
 
 var reserved = []string{
