@@ -12,27 +12,29 @@ type Opcode byte
 
 // Define Opcode
 const (
-	OpConstant    Opcode = iota // 0
-	OpAdd                       // 1
-	OpSub                       // 2
-	OpMul                       // 3
-	OpDiv                       // 4
-	OpDone                      // 5
-	OpEQ                        // 6
-	OpNEQ                       // 7
-	OpLess                      // 8
-	OpGreater                   // 9
-	OpLoadGlobal                // 10
-	OpStoreGlobal               // 11
-	OpJNT                       // 12
-	OpJMP                       // 13
-	OpCall                      // 14
-	OpReturn                    // 15
-	OpLoadLocal                 // 16
-	OpStoreLocal                // 17
-	OpInstance                  // 18
-	OpLoadMethod                // 19
-	OpCallMethod                // 19
+	OpConstant         Opcode = iota // 0
+	OpAdd                            // 1
+	OpSub                            // 2
+	OpMul                            // 3
+	OpDiv                            // 4
+	OpDone                           // 5
+	OpEQ                             // 6
+	OpNEQ                            // 7
+	OpLess                           // 8
+	OpGreater                        // 9
+	OpLoadGlobal                     // 10
+	OpStoreGlobal                    // 11
+	OpJNT                            // 12
+	OpJMP                            // 13
+	OpCall                           // 14
+	OpReturn                         // 15
+	OpLoadLocal                      // 16
+	OpStoreLocal                     // 17
+	OpInstance                       // 18
+	OpLoadMethod                     // 19
+	OpCallMethod                     // 19
+	OpLoadInstanceVal                // 20
+	OpStoreInstanceVal               // 21
 )
 
 // Definition consits of Name and OperandWidths property
@@ -42,27 +44,29 @@ type Definition struct {
 }
 
 var definitions = map[Opcode]*Definition{
-	OpConstant:    {"OpConstant", []int{2}},
-	OpAdd:         {"OpAdd", []int{}},
-	OpSub:         {"OpSub", []int{}},
-	OpMul:         {"OpMul", []int{}},
-	OpDiv:         {"OpDiv", []int{}},
-	OpDone:        {"OpDone", []int{}},
-	OpEQ:          {"OpEQ", []int{}},
-	OpNEQ:         {"OpNEQ", []int{}},
-	OpLess:        {"OpLess", []int{}},
-	OpGreater:     {"OpGreater", []int{}},
-	OpLoadGlobal:  {"OpLoadGlobal", []int{1}},
-	OpStoreGlobal: {"OpStoreGlobal", []int{1}},
-	OpJNT:         {"OpJNT", []int{2}}, // false → OpJNTの位置+[]int{2}の分飛ぶ
-	OpJMP:         {"OpJMP", []int{2}},
-	OpCall:        {"OpCall", []int{1}},
-	OpReturn:      {"OpReturn", []int{}},
-	OpLoadLocal:   {"OpLoadLocal", []int{1}},
-	OpStoreLocal:  {"OpStoreLocal", []int{1}},
-	OpInstance:    {"OpInstance", []int{1}},
-	OpLoadMethod:  {"OpLoadMethod", []int{1}},
-	OpCallMethod:  {"OpCallMethod", []int{1}},
+	OpConstant:         {"OpConstant", []int{2}},
+	OpAdd:              {"OpAdd", []int{}},
+	OpSub:              {"OpSub", []int{}},
+	OpMul:              {"OpMul", []int{}},
+	OpDiv:              {"OpDiv", []int{}},
+	OpDone:             {"OpDone", []int{}},
+	OpEQ:               {"OpEQ", []int{}},
+	OpNEQ:              {"OpNEQ", []int{}},
+	OpLess:             {"OpLess", []int{}},
+	OpGreater:          {"OpGreater", []int{}},
+	OpLoadGlobal:       {"OpLoadGlobal", []int{1}},
+	OpStoreGlobal:      {"OpStoreGlobal", []int{1}},
+	OpJNT:              {"OpJNT", []int{2}}, // false → OpJNTの位置+[]int{2}の分飛ぶ
+	OpJMP:              {"OpJMP", []int{2}},
+	OpCall:             {"OpCall", []int{1}},
+	OpReturn:           {"OpReturn", []int{}},
+	OpLoadLocal:        {"OpLoadLocal", []int{1}},
+	OpStoreLocal:       {"OpStoreLocal", []int{1}},
+	OpInstance:         {"OpInstance", []int{1}},
+	OpLoadMethod:       {"OpLoadMethod", []int{1}},
+	OpCallMethod:       {"OpCallMethod", []int{1}},
+	OpLoadInstanceVal:  {"OpLoadInstanceVal", []int{1}},
+	OpStoreInstanceVal: {"OpStoreInstanceVal", []int{1}},
 }
 
 // Lookup finds Definition of Opcode

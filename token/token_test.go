@@ -172,12 +172,13 @@ func TestTokenizer(t *testing.T) {
 
 	input4 := `
 class LED
-	def on()
+	def on(num)
+		self.pin = num
 	end
 end
 
 a = LED()
-a.on()`
+a.on(3)`
 	case4 := []struct {
 		expectKind    Kind
 		expectLiteral string
@@ -187,7 +188,13 @@ a.on()`
 		{KeyDef, "def"},
 		{Identifier, "on"},
 		{LParen, "("},
+		{Identifier, "num"},
 		{RParen, ")"},
+		{KeySelf, "self"},
+		{Dot, "."},
+		{Identifier, "pin"},
+		{Assign, "="},
+		{Identifier, "num"},
 		{KeyEnd, "end"},
 		{KeyEnd, "end"},
 		{Identifier, "a"},
@@ -199,6 +206,7 @@ a.on()`
 		{Dot, "."},
 		{Identifier, "on"},
 		{LParen, "("},
+		{Num, "3"},
 		{RParen, ")"},
 		{EOF, ""},
 	}

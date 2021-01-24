@@ -537,14 +537,14 @@ func (p *Parser) atom() (Node, error) {
 
 			if p.curToken.Kind != token.Dot {
 				if 'A' <= literal[0] && literal[0] <= 'Z' {
-					n = InstantiationExpr{IdentExpr{variable, literal}, args}
+					n = InstantiationExpr{IdentExpr{variable, literal, false}, args}
 					return n, nil
 				}
-				n = CallExpr{IdentExpr{variable, literal}, args}
+				n = CallExpr{IdentExpr{variable, literal, false}, args}
 				return n, nil
 			}
 		} else {
-			n = p.newValIdentifier()
+			n = p.newValIdentifier(false)
 		}
 
 		// call method
@@ -560,8 +560,16 @@ func (p *Parser) atom() (Node, error) {
 			return CallMethodExpr{n, node}, err
 		}
 		return n, nil
+	case token.KeySelf:
+		p.nextToken()
+		_, err := p.consume(".")
+		if err != nil {
+			return IdentExpr{}, err
+		}
+
+		return p.newValIdentifier(true), nil
 	}
-	return p.newValIdentifier(), nil
+	return p.newValIdentifier(false), nil
 }
 
 func (p *Parser) newIntegerLiteral() Node {
@@ -571,14 +579,14 @@ func (p *Parser) newIntegerLiteral() Node {
 	return node
 }
 
-func (p *Parser) newValIdentifier() Node {
-	node := IdentExpr{variable, p.curToken.Literal}
+func (p *Parser) newValIdentifier(flag bool) Node {
+	node := IdentExpr{variable, p.curToken.Literal, flag}
 	p.nextToken()
 	return node
 }
 
 func (p *Parser) newFnIdentifier() Node {
-	node := IdentExpr{fn, p.curToken.Literal}
+	node := IdentExpr{fn, p.curToken.Literal, false}
 	p.nextToken()
 	return node
 }

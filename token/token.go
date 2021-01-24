@@ -228,6 +228,7 @@ const (
 	KeyReturn               // 26:
 	KeyClass                // 27:
 	Dot                     // 28: .
+	KeySelf                 // 29:
 )
 
 var reserved = []string{
@@ -240,6 +241,7 @@ var reserved = []string{
 	"def",
 	"return",
 	"class",
+	"self",
 }
 
 var reservedToKind = map[string]Kind{
@@ -252,6 +254,7 @@ var reservedToKind = map[string]Kind{
 	"def":    KeyDef,
 	"return": KeyReturn,
 	"class":  KeyClass,
+	"self":   KeySelf,
 }
 
 func (t Tokenizer) isReserved() bool {

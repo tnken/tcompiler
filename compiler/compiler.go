@@ -48,6 +48,10 @@ func (c *Compiler) leaveClass() obj.Class {
 	return c.classPool[len(c.classPool)-1]
 }
 
+func (c *Compiler) currentClass() *obj.Class {
+	return &c.classPool[len(c.classPool)-1]
+}
+
 func (c *Compiler) enterScope() {
 	t := NewSymbolTable()
 	t.outerScope = c.currentScope().table
@@ -111,6 +115,12 @@ func (c *Compiler) gen(n parser.Node) {
 			c.emit(code.OpGreater, []int{}...)
 		}
 	case parser.IdentExpr:
+		if c.scopeIndex > 0 && c.FlagClassScope && node.FSelf {
+			class, _ := c.cTable.Resolve(c.currentClass().Name)
+			id, _ := class.ResolveInstanceVal(node.Name)
+			c.emit(code.OpLoadInstanceVal, []int{id}...)
+			return
+		}
 		if c.scopeIndex > 0 {
 			symbol, ok := c.currentScope().table.Resolve(node.Name)
 			if ok {
@@ -135,7 +145,14 @@ func (c *Compiler) gen(n parser.Node) {
 
 	case parser.AssignStmt:
 		c.gen(node.Expr)
-
+		// instance variable
+		if c.scopeIndex > 0 && c.FlagClassScope && node.Ident.FSelf {
+			class, _ := c.cTable.Resolve(c.currentClass().Name)
+			id := class.DefineInstanceVal(node.Ident.Name)
+			c.currentClass().NumInstanceVal = class.instanceValCount
+			c.emit(code.OpStoreInstanceVal, []int{id}...)
+			return
+		}
 		// local variable
 		if c.scopeIndex > 0 {
 			symbol, ok := c.currentScope().table.Resolve(node.Ident.Name)
@@ -228,7 +245,7 @@ func (c *Compiler) gen(n parser.Node) {
 		c.emit(code.OpReturn, []int{}...)
 	case parser.ClassDef:
 		ct := c.cTable.DefineClass(node.Ident.Name)
-		c.classPool = append(c.classPool, obj.Class{Index: ct.Index, NumInstanceVal: 0, NumMethod: 0, ConstantPool: []obj.Object{}})
+		c.classPool = append(c.classPool, obj.Class{Name: node.Ident.Name, Index: ct.Index, NumInstanceVal: 0, NumMethod: 0, ConstantPool: []obj.Object{}})
 		c.enterClass()
 		for _, method := range node.Methods {
 			c.gen(method)

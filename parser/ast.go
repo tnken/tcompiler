@@ -93,11 +93,15 @@ const (
 
 // IdentExpr has kind and name
 type IdentExpr struct {
-	kind IdentKind
-	Name string
+	kind  IdentKind
+	Name  string
+	FSelf bool
 }
 
 func (i IdentExpr) string() string {
+	if i.FSelf {
+		return "self." + i.Name
+	}
 	return i.Name
 }
 

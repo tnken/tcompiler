@@ -21,6 +21,7 @@ import (
 // }
 
 // struct class pool {
+//  u1 instance_val_count
 // 	u2 constant_pool_count
 // 	constant_pool[constant_pool_count]
 // }
@@ -35,8 +36,8 @@ type ConstantType byte
 
 // Define Constant type
 const (
-	CONST_INT  ConstantType = iota
-	CONST_FUNC ConstantType = iota
+	ConstInt  ConstantType = iota
+	ConstFunc ConstantType = iota
 )
 
 // TODO: 32bitに拡張+エラー処理
@@ -57,8 +58,11 @@ func (c *Compiler) Bytecode() string {
 	b += fmt.Sprintf("%02x", len(c.classPool))
 	// class pool[class pool count]
 	for _, class := range c.classPool {
-		// u2
+		// u1 instance val count
+		b += fmt.Sprintf("%02x", class.NumInstanceVal)
+		// u2 constant poool count
 		b += fmt.Sprintf("%02x", toUint16(len(class.ConstantPool)))
+		// constant pool
 		b += writeConstant(class.ConstantPool)
 	}
 	// u2 constant_pool_count
@@ -111,17 +115,17 @@ func writeConstant(cPool []obj.Object) string {
 		switch constant := constant.(type) {
 		case *obj.Integer:
 			// u1
-			b += fmt.Sprintf("%02x", CONST_INT)
+			b += fmt.Sprintf("%02x", ConstInt)
 			// u2
 			b += fmt.Sprintf("%02x", toUint16(constant.Size()))
 			// u2
 			b += fmt.Sprintf("%02x", toUint16(constant.Value))
 		case *obj.Function:
 			// u1
-			b += fmt.Sprintf("%02x", CONST_FUNC)
-			// u1
+			b += fmt.Sprintf("%02x", ConstFunc)
+			// u1 ダックタイプ用に関数名に一意なIDをふる
 			b += fmt.Sprintf("%02x", constant.Id)
-			// u2
+			// u2 サイズ
 			b += fmt.Sprintf("%02x", toUint16(constant.Size()))
 			for _, bytecode := range constant.Instructions {
 				b += fmt.Sprintf("%02x", bytecode)

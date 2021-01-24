@@ -96,7 +96,8 @@ end
 		{
 			`
 class LED
-def on()
+def on(num)
+  self.pin = num
 end
 def off()
 end
@@ -106,7 +107,8 @@ b = LED()
 a.on()
 b.off()`,
 			[]string{`class LED
-def on()
+def on(num)
+  self.pin = num
 end
 def off()
 end

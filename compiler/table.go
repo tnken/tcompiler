@@ -44,8 +44,15 @@ func (st *SymbolTable) Resolve(name string) (Symbol, bool) {
 }
 
 type Class struct {
-	Name  string
-	Index int
+	Name             string
+	Index            int
+	instanceValTable map[string]int
+	instanceValCount int
+}
+
+func NewClass(name string, index int) Class {
+	t := make(map[string]int)
+	return Class{Name: name, Index: index, instanceValTable: t, instanceValCount: 0}
 }
 
 type ClassTable struct {
@@ -59,15 +66,26 @@ func NewClassTable() *ClassTable {
 }
 
 func (ct *ClassTable) DefineClass(name string) Class {
-	class := Class{Name: name, Index: ct.classCount}
+	class := NewClass(name, ct.classCount)
 	ct.store[name] = class
 	ct.classCount++
 	return class
 }
 
-func (ct *ClassTable) Resolve(name string) (Class, bool) {
+func (ct *ClassTable) Resolve(name string) (*Class, bool) {
 	class, ok := ct.store[name]
-	return class, ok
+	return &class, ok
+}
+
+func (c *Class) DefineInstanceVal(name string) int {
+	c.instanceValTable[name] = c.instanceValCount
+	c.instanceValCount++
+	return c.instanceValTable[name]
+}
+
+func (c *Class) ResolveInstanceVal(name string) (int, bool) {
+	id, ok := c.instanceValTable[name]
+	return id, ok
 }
 
 type MethodTable struct {
