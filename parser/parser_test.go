@@ -99,7 +99,8 @@ end
 			`
 class LED
 def on(num)
-  self.pin: number = num
+	self.pin: number = num
+	self.hoge: {include: 22..23} = num
 end
 def off()
 end
@@ -111,6 +112,7 @@ b.off()`,
 			[]string{`class LED
 def on(num)
   self.pin: number = num
+  self.hoge: {include: 22..23} = num
 end
 def off()
 end

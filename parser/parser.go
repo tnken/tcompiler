@@ -544,14 +544,14 @@ func (p *Parser) atom() (Node, error) {
 
 			if p.curToken.Kind != token.Dot {
 				if 'A' <= literal[0] && literal[0] <= 'Z' {
-					n = InstantiationExpr{IdentExpr{variable, literal, false, Any}, args}
+					n = InstantiationExpr{IdentExpr{variable, literal, false, Any, IntegerRangeLiteral{}}, args}
 					return n, nil
 				}
-				n = CallExpr{IdentExpr{variable, literal, false, Any}, args}
+				n = CallExpr{IdentExpr{variable, literal, false, Any, IntegerRangeLiteral{}}, args}
 				return n, nil
 			}
 		} else {
-			n = p.newValIdentifier(false, Any)
+			n = p.newValIdentifier(false, Any, IntegerRangeLiteral{})
 		}
 
 		// call method
@@ -573,13 +573,14 @@ func (p *Parser) atom() (Node, error) {
 		if err != nil {
 			return IdentExpr{}, err
 		}
-		n, _ := p.newValIdentifier(true, Any).(IdentExpr)
+		n, _ := p.newValIdentifier(true, Any, IntegerRangeLiteral{}).(IdentExpr)
 
 		f, err := p.consume(":")
 		if err != nil {
 			return IdentExpr{}, err
 		}
 		if f {
+			// instance val checker
 			switch p.curToken.Kind {
 			case token.KeyNumber:
 				n.ValType = Num
@@ -589,12 +590,47 @@ func (p *Parser) atom() (Node, error) {
 				n.ValType = Bool
 				p.nextToken()
 				return n, nil
+
+			case token.Lbrace:
+				p.nextToken()
+				if p.curToken.Kind == token.KeyInclude {
+					p.nextToken()
+					// デモ用に動作固定
+					// TODO: fix
+					_, err := p.consume(":")
+					if err != nil {
+						return IdentExpr{}, err
+					}
+					lim, _ := p.newIntegerRangeLiteral().(IntegerRangeLiteral)
+					_, err = p.consume("}")
+					if err != nil {
+						return IdentExpr{}, err
+					}
+					n.ValLimit = lim
+					n.ValType = Include
+					return n, nil
+				}
+				if p.curToken.Kind == token.KeyExclude {
+					p.nextToken()
+					_, err = p.consume(":")
+					if err != nil {
+						return IdentExpr{}, err
+					}
+					lim, _ := p.newIntegerRangeLiteral().(IntegerRangeLiteral)
+					_, err = p.consume("}")
+					if err != nil {
+						return IdentExpr{}, err
+					}
+					n.ValLimit = lim
+					n.ValType = Exclude
+					return n, nil
+				}
 			}
 		}
 
 		return n, nil
 	}
-	return p.newValIdentifier(false, Any), nil
+	return p.newValIdentifier(false, Any, IntegerRangeLiteral{}), nil
 }
 
 func (p *Parser) newIntegerLiteral() Node {
@@ -621,14 +657,14 @@ func (p *Parser) newIntegerRangeLiteral() Node {
 	return IntegerRangeLiteral{From: from, To: to}
 }
 
-func (p *Parser) newValIdentifier(flag bool, vt IdentValType) Node {
-	node := IdentExpr{variable, p.curToken.Literal, flag, vt}
+func (p *Parser) newValIdentifier(flag bool, vt IdentValType, lim IntegerRangeLiteral) Node {
+	node := IdentExpr{variable, p.curToken.Literal, flag, vt, lim}
 	p.nextToken()
 	return node
 }
 
 func (p *Parser) newFnIdentifier() Node {
-	node := IdentExpr{fn, p.curToken.Literal, false, Any}
+	node := IdentExpr{fn, p.curToken.Literal, false, Any, IntegerRangeLiteral{}}
 	p.nextToken()
 	return node
 }

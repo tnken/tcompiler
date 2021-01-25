@@ -112,14 +112,18 @@ const (
 
 // IdentExpr has kind and name
 type IdentExpr struct {
-	kind    IdentKind
-	Name    string
-	FSelf   bool
-	ValType IdentValType
+	kind     IdentKind
+	Name     string
+	FSelf    bool
+	ValType  IdentValType
+	ValLimit IntegerRangeLiteral
 }
 
 func (i IdentExpr) string() string {
 	if i.FSelf {
+		if i.ValType == Exclude || i.ValType == Include {
+			return "self." + i.Name + ": {" + valTypeDefinition[i.ValType] + ": " + i.ValLimit.string() + "}"
+		}
 		if i.ValType != Any {
 			return "self." + i.Name + ": " + valTypeDefinition[i.ValType]
 		}
@@ -137,12 +141,16 @@ const (
 	Nil
 	Range
 	Any
+	Include
+	Exclude
 )
 
 var valTypeDefinition = map[IdentValType]string{
-	Num:  "number",
-	Bool: "bool",
-	Nil:  "nil",
+	Num:     "number",
+	Bool:    "bool",
+	Nil:     "nil",
+	Include: "include",
+	Exclude: "exclude",
 }
 
 func ValTypeToInt(vt IdentValType) int {
@@ -153,6 +161,10 @@ func ValTypeToInt(vt IdentValType) int {
 		return 1
 	case Nil:
 		return 2
+	case Include:
+		return 5
+	case Exclude:
+		return 6
 	}
 	return 4
 }

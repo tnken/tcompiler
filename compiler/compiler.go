@@ -158,6 +158,9 @@ func (c *Compiler) gen(n parser.Node) {
 			class, _ := c.cTable.Resolve(c.currentClass().Name)
 			id := class.DefineInstanceVal(node.Ident.Name)
 			c.currentClass().NumInstanceVal = class.instanceValCount
+			if node.Ident.ValType == parser.Include || node.Ident.ValType == parser.Exclude {
+				c.gen(node.Ident.ValLimit)
+			}
 			c.emit(code.OpStoreInstanceVal, []int{id, parser.ValTypeToInt(node.Ident.ValType)}...)
 			return
 		}

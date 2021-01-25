@@ -262,6 +262,8 @@ const (
 	KeyTrue                 // 35:
 	KeyFalse                // 36:
 	DotDot                  // 36: ..
+	KeyInclude              // 37
+	KeyExclude              // 38
 )
 
 var reserved = []string{
@@ -280,24 +282,28 @@ var reserved = []string{
 	"nil",
 	"true",
 	"false",
+	"include",
+	"exclude",
 }
 
 var reservedToKind = map[string]Kind{
-	"loop":   KeyLoop,
-	"if":     KeyIf,
-	"do":     KeyDo,
-	"then":   KeyThen,
-	"end":    KeyEnd,
-	"while":  KeyWhile,
-	"def":    KeyDef,
-	"return": KeyReturn,
-	"class":  KeyClass,
-	"self":   KeySelf,
-	"number": KeyNumber,
-	"bool":   KeyBool,
-	"nil":    KeyNil,
-	"true":   KeyTrue,
-	"false":  KeyFalse,
+	"loop":    KeyLoop,
+	"if":      KeyIf,
+	"do":      KeyDo,
+	"then":    KeyThen,
+	"end":     KeyEnd,
+	"while":   KeyWhile,
+	"def":     KeyDef,
+	"return":  KeyReturn,
+	"class":   KeyClass,
+	"self":    KeySelf,
+	"number":  KeyNumber,
+	"bool":    KeyBool,
+	"nil":     KeyNil,
+	"true":    KeyTrue,
+	"false":   KeyFalse,
+	"include": KeyInclude,
+	"exclude": KeyExclude,
 }
 
 func (t Tokenizer) isReserved() bool {
