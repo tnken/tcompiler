@@ -173,6 +173,8 @@ func (t *Tokenizer) Next() (Token, error) {
 		return t.newToken(Comma, string(ch)), nil
 	case ch == '.':
 		return t.newToken(Dot, string(ch)), nil
+	case ch == ':':
+		return t.newToken(Colon, string(ch)), nil
 	case ch == '=':
 		if t.Input[t.Pos+1] == '=' {
 			return t.newToken(Eq, "=="), nil
@@ -250,6 +252,12 @@ const (
 	Dot                     // 28: .
 	KeySelf                 // 29:
 	Number                  // 30: #
+	Colon                   // 31: :
+	KeyNumber               // 32:
+	KeyBool                 // 33:
+	KeyNil                  // 34:
+	KeyTrue                 // 35:
+	KeyFalse                // 36:
 )
 
 var reserved = []string{
@@ -263,6 +271,11 @@ var reserved = []string{
 	"return",
 	"class",
 	"self",
+	"number",
+	"bool",
+	"nil",
+	"true",
+	"false",
 }
 
 var reservedToKind = map[string]Kind{
@@ -276,6 +289,11 @@ var reservedToKind = map[string]Kind{
 	"return": KeyReturn,
 	"class":  KeyClass,
 	"self":   KeySelf,
+	"number": KeyNumber,
+	"bool":   KeyBool,
+	"nil":    KeyNil,
+	"true":   KeyTrue,
+	"false":  KeyFalse,
 }
 
 func (t Tokenizer) isReserved() bool {

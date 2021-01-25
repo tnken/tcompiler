@@ -30,6 +30,7 @@ type Stmt interface {
 // For Debugging
 func (i InfixExpr) nodeExpr()         {}
 func (i IntegerLiteral) nodeExpr()    {}
+func (b BoolLiteral) nodeExpr()       {}
 func (i IdentExpr) nodeExpr()         {}
 func (c CallExpr) nodeExpr()          {}
 func (i InstantiationExpr) nodeExpr() {}
@@ -83,6 +84,14 @@ func (i IntegerLiteral) string() string {
 	return strconv.Itoa(i.Val)
 }
 
+type BoolLiteral struct {
+	Tok token.Token
+}
+
+func (b BoolLiteral) string() string {
+	return b.Tok.Literal
+}
+
 // IdentKind show kind of the Identifier as enum
 type IdentKind int
 
@@ -93,16 +102,49 @@ const (
 
 // IdentExpr has kind and name
 type IdentExpr struct {
-	kind  IdentKind
-	Name  string
-	FSelf bool
+	kind    IdentKind
+	Name    string
+	FSelf   bool
+	ValType IdentValType
 }
 
 func (i IdentExpr) string() string {
 	if i.FSelf {
+		if i.ValType != Any {
+			return "self." + i.Name + ": " + valTypeDefinition[i.ValType]
+		}
 		return "self." + i.Name
 	}
 	return i.Name
+}
+
+type IdentValType int
+
+// 格納できる値の型を保持する
+const (
+	Num IdentValType = iota
+	Bool
+	Nil
+	Range
+	Any
+)
+
+var valTypeDefinition = map[IdentValType]string{
+	Num:  "number",
+	Bool: "bool",
+	Nil:  "nil",
+}
+
+func ValTypeToInt(vt IdentValType) int {
+	switch vt {
+	case Num:
+		return 0
+	case Bool:
+		return 1
+	case Nil:
+		return 2
+	}
+	return 4
 }
 
 type CallExpr struct {

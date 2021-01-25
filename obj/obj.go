@@ -12,6 +12,7 @@ const (
 	IntegerObj  = "INTEGER"
 	FunctionObj = "FUNCTION"
 	ClassObj    = "CLASS"
+	BoolObj     = "BOOL"
 )
 
 type Object interface {
@@ -55,3 +56,12 @@ func (c *Class) Inspect() string  { return fmt.Sprintf("class%p", c) }
 
 // それぞれ1byte
 func (c *Class) Size() int { return 2 }
+
+type Bool struct {
+	Value int
+}
+
+func (b *Bool) Type() ObjectType { return BoolObj }
+func (b *Bool) Inspect() string  { return fmt.Sprintf("%d", b.Value) }
+
+func (b *Bool) Size() int { return 1 }

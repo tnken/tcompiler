@@ -503,6 +503,10 @@ func (p *Parser) atom() (Node, error) {
 	switch p.curToken.Kind {
 	case token.Num:
 		return p.newIntegerLiteral(), nil
+	case token.KeyTrue:
+		return p.newBoolLiteral(), nil
+	case token.KeyFalse:
+		return p.newBoolLiteral(), nil
 	case token.Identifier:
 		var n Node
 		// CallExpr
@@ -537,14 +541,14 @@ func (p *Parser) atom() (Node, error) {
 
 			if p.curToken.Kind != token.Dot {
 				if 'A' <= literal[0] && literal[0] <= 'Z' {
-					n = InstantiationExpr{IdentExpr{variable, literal, false}, args}
+					n = InstantiationExpr{IdentExpr{variable, literal, false, Any}, args}
 					return n, nil
 				}
-				n = CallExpr{IdentExpr{variable, literal, false}, args}
+				n = CallExpr{IdentExpr{variable, literal, false, Any}, args}
 				return n, nil
 			}
 		} else {
-			n = p.newValIdentifier(false)
+			n = p.newValIdentifier(false, Any)
 		}
 
 		// call method
@@ -566,10 +570,28 @@ func (p *Parser) atom() (Node, error) {
 		if err != nil {
 			return IdentExpr{}, err
 		}
+		n, _ := p.newValIdentifier(true, Any).(IdentExpr)
 
-		return p.newValIdentifier(true), nil
+		f, err := p.consume(":")
+		if err != nil {
+			return IdentExpr{}, err
+		}
+		if f {
+			switch p.curToken.Kind {
+			case token.KeyNumber:
+				n.ValType = Num
+				p.nextToken()
+				return n, nil
+			case token.KeyBool:
+				n.ValType = Bool
+				p.nextToken()
+				return n, nil
+			}
+		}
+
+		return n, nil
 	}
-	return p.newValIdentifier(false), nil
+	return p.newValIdentifier(false, Any), nil
 }
 
 func (p *Parser) newIntegerLiteral() Node {
@@ -579,14 +601,20 @@ func (p *Parser) newIntegerLiteral() Node {
 	return node
 }
 
-func (p *Parser) newValIdentifier(flag bool) Node {
-	node := IdentExpr{variable, p.curToken.Literal, flag}
+func (p *Parser) newBoolLiteral() Node {
+	node := BoolLiteral{p.curToken}
+	p.nextToken()
+	return node
+}
+
+func (p *Parser) newValIdentifier(flag bool, vt IdentValType) Node {
+	node := IdentExpr{variable, p.curToken.Literal, flag, vt}
 	p.nextToken()
 	return node
 }
 
 func (p *Parser) newFnIdentifier() Node {
-	node := IdentExpr{fn, p.curToken.Literal, false}
+	node := IdentExpr{fn, p.curToken.Literal, false, Any}
 	p.nextToken()
 	return node
 }

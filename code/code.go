@@ -68,7 +68,7 @@ var definitions = map[Opcode]*Definition{
 	OpLoadMethod:       {"OpLoadMethod", []int{1}},
 	OpCallMethod:       {"OpCallMethod", []int{1}},
 	OpLoadInstanceVal:  {"OpLoadInstanceVal", []int{1}},
-	OpStoreInstanceVal: {"OpStoreInstanceVal", []int{1}},
+	OpStoreInstanceVal: {"OpStoreInstanceVal", []int{1, 1}},
 }
 
 // Lookup finds Definition of Opcode

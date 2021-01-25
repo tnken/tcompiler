@@ -13,6 +13,7 @@ func TestParser(t *testing.T) {
 		expected []string
 	}{
 		{"1", []string{"1"}},
+		{"true", []string{"true"}},
 		{"1+2*3", []string{"(1 + (2 * 3))"}},
 		{"1 * 2 + 3", []string{"((1 * 2) + 3)"}},
 		{"a=1+1", []string{"a = (1 + 1)"}},
@@ -97,7 +98,7 @@ end
 			`
 class LED
 def on(num)
-  self.pin = num
+  self.pin: number = num
 end
 def off()
 end
@@ -108,7 +109,7 @@ a.on()
 b.off()`,
 			[]string{`class LED
 def on(num)
-  self.pin = num
+  self.pin: number = num
 end
 def off()
 end

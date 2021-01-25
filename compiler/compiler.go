@@ -93,6 +93,12 @@ func (c *Compiler) gen(n parser.Node) {
 	case parser.IntegerLiteral:
 		integer := &obj.Integer{Value: node.Val}
 		c.emit(code.OpConstant, []int{c.addConstant(integer)}...)
+	case parser.BoolLiteral:
+		if node.Tok.Literal == "true" {
+			c.emit(code.OpConstant, []int{c.addConstant(&obj.Bool{Value: 1})}...)
+			return
+		}
+		c.emit(code.OpConstant, []int{c.addConstant(&obj.Bool{Value: 0})}...)
 	case parser.InfixExpr:
 		c.gen(node.Left)
 		c.gen(node.Right)
@@ -150,7 +156,7 @@ func (c *Compiler) gen(n parser.Node) {
 			class, _ := c.cTable.Resolve(c.currentClass().Name)
 			id := class.DefineInstanceVal(node.Ident.Name)
 			c.currentClass().NumInstanceVal = class.instanceValCount
-			c.emit(code.OpStoreInstanceVal, []int{id}...)
+			c.emit(code.OpStoreInstanceVal, []int{id, parser.ValTypeToInt(node.Ident.ValType)}...)
 			return
 		}
 		// local variable

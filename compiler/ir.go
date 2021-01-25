@@ -38,6 +38,7 @@ type ConstantType byte
 const (
 	ConstInt  ConstantType = iota
 	ConstFunc ConstantType = iota
+	ConstBool ConstantType = iota
 )
 
 // TODO: 32bitに拡張+エラー処理
@@ -120,6 +121,13 @@ func writeConstant(cPool []obj.Object) string {
 			b += fmt.Sprintf("%02x", toUint16(constant.Size()))
 			// u2
 			b += fmt.Sprintf("%02x", toUint16(constant.Value))
+		case *obj.Bool:
+			// u1
+			b += fmt.Sprintf("%02x", ConstBool)
+			// u2
+			b += fmt.Sprintf("%02x", toUint16(constant.Size()))
+			// u2
+			b += fmt.Sprintf("%02x", constant.Value)
 		case *obj.Function:
 			// u1
 			b += fmt.Sprintf("%02x", ConstFunc)
