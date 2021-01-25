@@ -99,6 +99,8 @@ func (c *Compiler) gen(n parser.Node) {
 			return
 		}
 		c.emit(code.OpConstant, []int{c.addConstant(&obj.Bool{Value: 0})}...)
+	case parser.IntegerRangeLiteral:
+		c.emit(code.OpConstant, []int{c.addConstant(&obj.Range{From: node.From.Val, To: node.To.Val})}...)
 	case parser.InfixExpr:
 		c.gen(node.Left)
 		c.gen(node.Right)

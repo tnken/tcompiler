@@ -36,9 +36,10 @@ type ConstantType byte
 
 // Define Constant type
 const (
-	ConstInt  ConstantType = iota
-	ConstFunc ConstantType = iota
-	ConstBool ConstantType = iota
+	ConstInt   ConstantType = iota
+	ConstFunc  ConstantType = iota
+	ConstBool  ConstantType = iota
+	ConstRange ConstantType = iota
 )
 
 // TODO: 32bitに拡張+エラー処理
@@ -138,6 +139,15 @@ func writeConstant(cPool []obj.Object) string {
 			for _, bytecode := range constant.Instructions {
 				b += fmt.Sprintf("%02x", bytecode)
 			}
+		case *obj.Range:
+			// u1
+			b += fmt.Sprintf("%02x", ConstRange)
+			// u2 サイズ
+			b += fmt.Sprintf("%02x", toUint16(constant.Size()))
+			// from
+			b += fmt.Sprintf("%02x", toUint16(constant.From))
+			// to
+			b += fmt.Sprintf("%02x", toUint16(constant.To))
 		}
 	}
 	return b

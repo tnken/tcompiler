@@ -28,21 +28,22 @@ type Stmt interface {
 }
 
 // For Debugging
-func (i InfixExpr) nodeExpr()         {}
-func (i IntegerLiteral) nodeExpr()    {}
-func (b BoolLiteral) nodeExpr()       {}
-func (i IdentExpr) nodeExpr()         {}
-func (c CallExpr) nodeExpr()          {}
-func (i InstantiationExpr) nodeExpr() {}
-func (c CallMethodExpr) nodeExpr()    {}
-func (l LoopStmt) nodeStmt()          {}
-func (a AssignStmt) nodeStmt()        {}
-func (b BlockStmt) nodeStmt()         {}
-func (i IfStmt) nodeStmt()            {}
-func (w WhileStmt) nodeStmt()         {}
-func (f FunctionDef) nodeStmt()       {}
-func (r ReturnStmt) nodeStmt()        {}
-func (c ClassDef) nodeStmt()          {}
+func (i InfixExpr) nodeExpr()           {}
+func (i IntegerLiteral) nodeExpr()      {}
+func (i IntegerRangeLiteral) nodeExpr() {}
+func (b BoolLiteral) nodeExpr()         {}
+func (i IdentExpr) nodeExpr()           {}
+func (c CallExpr) nodeExpr()            {}
+func (i InstantiationExpr) nodeExpr()   {}
+func (c CallMethodExpr) nodeExpr()      {}
+func (l LoopStmt) nodeStmt()            {}
+func (a AssignStmt) nodeStmt()          {}
+func (b BlockStmt) nodeStmt()           {}
+func (i IfStmt) nodeStmt()              {}
+func (w WhileStmt) nodeStmt()           {}
+func (f FunctionDef) nodeStmt()         {}
+func (r ReturnStmt) nodeStmt()          {}
+func (c ClassDef) nodeStmt()            {}
 
 //
 // Expr
@@ -82,6 +83,15 @@ type IntegerLiteral struct {
 
 func (i IntegerLiteral) string() string {
 	return strconv.Itoa(i.Val)
+}
+
+type IntegerRangeLiteral struct {
+	From IntegerLiteral
+	To   IntegerLiteral
+}
+
+func (i IntegerRangeLiteral) string() string {
+	return strconv.Itoa(i.From.Val) + ".." + strconv.Itoa(i.To.Val)
 }
 
 type BoolLiteral struct {

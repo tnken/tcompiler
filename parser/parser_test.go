@@ -13,6 +13,7 @@ func TestParser(t *testing.T) {
 		expected []string
 	}{
 		{"1", []string{"1"}},
+		{"2..5", []string{"2..5"}},
 		{"true", []string{"true"}},
 		{"1+2*3", []string{"(1 + (2 * 3))"}},
 		{"1 * 2 + 3", []string{"((1 * 2) + 3)"}},

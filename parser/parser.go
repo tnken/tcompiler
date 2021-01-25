@@ -502,6 +502,9 @@ func (p *Parser) prim() (Node, error) {
 func (p *Parser) atom() (Node, error) {
 	switch p.curToken.Kind {
 	case token.Num:
+		if p.peekToken.Kind == token.DotDot {
+			return p.newIntegerRangeLiteral(), nil
+		}
 		return p.newIntegerLiteral(), nil
 	case token.KeyTrue:
 		return p.newBoolLiteral(), nil
@@ -605,6 +608,17 @@ func (p *Parser) newBoolLiteral() Node {
 	node := BoolLiteral{p.curToken}
 	p.nextToken()
 	return node
+}
+
+func (p *Parser) newIntegerRangeLiteral() Node {
+	val, _ := strconv.Atoi(p.curToken.Literal)
+	from := IntegerLiteral{p.curToken, val}
+	p.nextToken()
+	p.nextToken()
+	val, _ = strconv.Atoi(p.curToken.Literal)
+	to := IntegerLiteral{p.curToken, val}
+	p.nextToken()
+	return IntegerRangeLiteral{From: from, To: to}
 }
 
 func (p *Parser) newValIdentifier(flag bool, vt IdentValType) Node {

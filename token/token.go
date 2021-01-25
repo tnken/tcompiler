@@ -172,6 +172,9 @@ func (t *Tokenizer) Next() (Token, error) {
 	case ch == ',':
 		return t.newToken(Comma, string(ch)), nil
 	case ch == '.':
+		if t.Input[t.Pos:t.Pos+2] == ".." {
+			return t.newToken(DotDot, ".."), nil
+		}
 		return t.newToken(Dot, string(ch)), nil
 	case ch == ':':
 		return t.newToken(Colon, string(ch)), nil
@@ -258,6 +261,7 @@ const (
 	KeyNil                  // 34:
 	KeyTrue                 // 35:
 	KeyFalse                // 36:
+	DotDot                  // 36: ..
 )
 
 var reserved = []string{

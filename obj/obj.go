@@ -13,6 +13,7 @@ const (
 	FunctionObj = "FUNCTION"
 	ClassObj    = "CLASS"
 	BoolObj     = "BOOL"
+	RangeObj    = "RANGE"
 )
 
 type Object interface {
@@ -65,3 +66,13 @@ func (b *Bool) Type() ObjectType { return BoolObj }
 func (b *Bool) Inspect() string  { return fmt.Sprintf("%d", b.Value) }
 
 func (b *Bool) Size() int { return 1 }
+
+type Range struct {
+	From int
+	To   int
+}
+
+func (r *Range) Type() ObjectType { return RangeObj }
+func (r *Range) Inspect() string  { return fmt.Sprintf("%d..%d", r.From, r.To) }
+
+func (r *Range) Size() int { return 4 }

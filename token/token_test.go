@@ -181,6 +181,7 @@ end
 
 # this is also comment
 a = LED()
+c = 2..3
 a.on(3) # call on method`
 	case4 := []struct {
 		expectKind    Kind
@@ -205,6 +206,11 @@ a.on(3) # call on method`
 		{Identifier, "LED"},
 		{LParen, "("},
 		{RParen, ")"},
+		{Identifier, "c"},
+		{Assign, "="},
+		{Num, "2"},
+		{DotDot, ".."},
+		{Num, "3"},
 		{Identifier, "a"},
 		{Dot, "."},
 		{Identifier, "on"},
